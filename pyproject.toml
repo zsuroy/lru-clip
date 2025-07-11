@@ -1,0 +1,9 @@
+[project]
+name = "lru-clip"
+version = "0.1.0"
+description = "CLIP.LRU, Paste Before You Think."
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = "."
