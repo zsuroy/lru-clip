@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db, settings
-from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, AnonymousSessionCreate, AnonymousSessionResponse
+from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, AnonymousSessionResponse
 from app.services.auth import auth_service
 from app.utils.auth import get_current_active_user, get_current_user_optional, require_authenticated_user
 

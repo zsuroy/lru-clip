@@ -2,11 +2,9 @@
 Tests for LRU service functionality
 """
 
-import pytest
 from datetime import datetime, timedelta
 from app.services.lru import lru_service
 from app.models.clip import Clip
-from app.models.user import User
 
 
 class TestLRUService:
@@ -42,7 +40,7 @@ class TestLRUService:
                 title=f"Clip {i}",
                 content=f"Content {i}",
                 owner_id=test_user.id,
-                created_at=datetime.utcnow() - timedelta(hours=2)  # Old enough to delete
+                created_at=datetime.now(datetime.UTC) - timedelta(hours=2)  # Old enough to delete
             )
             db_session.add(clip)
         
@@ -68,8 +66,8 @@ class TestLRUService:
                 title=f"Clip {i}",
                 content=f"Content {i}",
                 owner_id=test_user.id,
-                created_at=datetime.utcnow() - timedelta(hours=2),  # Old enough to delete
-                last_accessed=datetime.utcnow() - timedelta(hours=i)  # Different access times
+                created_at=datetime.now(datetime.UTC) - timedelta(hours=2),  # Old enough to delete
+                last_accessed=datetime.now(datetime.UTC) - timedelta(hours=i)  # Different access times
             )
             clips.append(clip)
             db_session.add(clip)
@@ -96,8 +94,8 @@ class TestLRUService:
                 content=f"Content {i}",
                 owner_id=test_user.id,
                 is_pinned=(i < 2),  # Pin first 2 clips
-                created_at=datetime.utcnow() - timedelta(hours=2),
-                last_accessed=datetime.utcnow() - timedelta(hours=i)
+                created_at=datetime.now(datetime.UTC) - timedelta(hours=2),
+                last_accessed=datetime.now(datetime.UTC) - timedelta(hours=i)
             )
             db_session.add(clip)
         
@@ -126,8 +124,8 @@ class TestLRUService:
                 title=f"Clip {i}",
                 content=f"Content {i}",
                 owner_id=test_user.id,
-                created_at=datetime.utcnow() - timedelta(minutes=30 if i < 2 else 120),  # First 2 are recent
-                last_accessed=datetime.utcnow() - timedelta(hours=i)
+                created_at=datetime.now(datetime.UTC) - timedelta(minutes=30 if i < 2 else 120),  # First 2 are recent
+                last_accessed=datetime.now(datetime.UTC) - timedelta(hours=i)
             )
             db_session.add(clip)
         
@@ -148,9 +146,9 @@ class TestLRUService:
         for i in range(3):
             expires_at = None
             if i == 0:
-                expires_at = datetime.utcnow() - timedelta(hours=1)  # Expired
+                expires_at = datetime.now(datetime.UTC) - timedelta(hours=1)  # Expired
             elif i == 1:
-                expires_at = datetime.utcnow() + timedelta(hours=1)  # Not expired
+                expires_at = datetime.now(datetime.UTC) + timedelta(hours=1)  # Not expired
             # i == 2: No expiration
             
             clip = Clip(
@@ -185,8 +183,8 @@ class TestLRUService:
                     title=f"Clip {i}",
                     content=f"Content {i}",
                     owner_id=user.id,
-                    created_at=datetime.utcnow() - timedelta(hours=2),
-                    last_accessed=datetime.utcnow() - timedelta(hours=i)
+                    created_at=datetime.now(datetime.UTC) - timedelta(hours=2),
+                    last_accessed=datetime.now(datetime.UTC) - timedelta(hours=i)
                 )
                 db_session.add(clip)
         
@@ -195,7 +193,7 @@ class TestLRUService:
             title="Expired",
             content="Expired content",
             owner_id=test_user.id,
-            expires_at=datetime.utcnow() - timedelta(hours=1)
+            expires_at=datetime.now(datetime.UTC) - timedelta(hours=1)
         )
         db_session.add(expired_clip)
         

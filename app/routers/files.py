@@ -11,7 +11,7 @@ from app.database import get_db
 from app.schemas.file import FileResponse as FileResponseSchema, FileUploadResponse, FileListResponse
 from app.services.file import file_service
 from app.services.clip import clip_service
-from app.utils.auth import get_current_active_user, get_current_user_or_anonymous
+from app.utils.auth import get_current_user_or_anonymous
 
 
 router = APIRouter(prefix="/files", tags=["Files"])

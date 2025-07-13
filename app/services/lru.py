@@ -5,7 +5,7 @@ LRU service for managing automatic cleanup of clips
 from datetime import datetime, timedelta
 from typing import List
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc
+from sqlalchemy import and_
 
 from app.models.clip import Clip
 from app.models.user import User
@@ -41,7 +41,7 @@ class LRUService:
         deleted_count = 0
         for clip in clips_to_delete:
             # Additional check: don't delete recently created clips (less than 1 hour old)
-            if clip.created_at > datetime.utcnow() - timedelta(hours=1):
+            if clip.created_at > datetime.now(datetime.UTC) - timedelta(hours=1):
                 continue
             
             db.delete(clip)
@@ -54,7 +54,7 @@ class LRUService:
     
     def cleanup_expired_clips(self, db: Session) -> int:
         """Clean up expired clips across all users"""
-        now = datetime.utcnow()
+        now = datetime.now(datetime.UTC)
         expired_clips = db.query(Clip).filter(
             and_(
                 Clip.expires_at.isnot(None),
@@ -106,7 +106,7 @@ class LRUService:
         deleted_users = auth_service.cleanup_expired_anonymous_users(db)
 
         # Also clean up anonymous clips that have expired individually
-        expire_time = datetime.utcnow() - timedelta(hours=settings.anonymous_clip_expire_hours)
+        expire_time = datetime.now(datetime.UTC) - timedelta(hours=settings.anonymous_clip_expire_hours)
 
         expired_clips = db.query(Clip).join(User).filter(
             and_(

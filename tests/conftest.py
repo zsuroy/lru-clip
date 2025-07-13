@@ -5,7 +5,6 @@ Test configuration and fixtures
 import pytest
 import tempfile
 import shutil
-from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient

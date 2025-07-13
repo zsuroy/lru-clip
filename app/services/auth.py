@@ -11,7 +11,7 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, status
 
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin
+from app.schemas.user import UserCreate
 from app.database import settings
 
 
@@ -36,9 +36,9 @@ class AuthService:
         """Create a JWT access token"""
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(datetime.UTC) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+            expire = datetime.now(datetime.UTC) + timedelta(minutes=self.access_token_expire_minutes)
         
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
@@ -79,7 +79,7 @@ class AuthService:
             return None
         
         # Update last login
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(datetime.UTC)
         db.commit()
         
         return user
@@ -153,7 +153,7 @@ class AuthService:
 
     def cleanup_expired_anonymous_users(self, db: Session) -> int:
         """Clean up expired anonymous users"""
-        expire_time = datetime.utcnow() - timedelta(hours=settings.anonymous_clip_expire_hours)
+        expire_time = datetime.now(datetime.UTC) - timedelta(hours=settings.anonymous_clip_expire_hours)
 
         expired_users = db.query(User).filter(
             User.is_anonymous == True,

@@ -42,7 +42,8 @@ class FileInfo(BaseModel):
     created_at: datetime
     
     class Config:
-        from_attributes = True
+        model_validate = True
+        orm_mode = True
 
 
 class ClipResponse(ClipBase):
@@ -59,7 +60,8 @@ class ClipResponse(ClipBase):
     files: List[FileInfo] = []
     
     class Config:
-        from_attributes = True
+        model_validate = True
+        orm_mode = True
 
 
 class ClipListResponse(BaseModel):

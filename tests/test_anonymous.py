@@ -2,7 +2,6 @@
 Tests for anonymous user functionality
 """
 
-import pytest
 import io
 from fastapi.testclient import TestClient
 from app.database import settings

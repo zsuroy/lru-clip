@@ -40,7 +40,8 @@ class UserResponse(UserBase):
     storage_quota: int
 
     class Config:
-        from_attributes = True
+        model_validate = True
+        orm_mode = True
 
 
 class UserUpdate(BaseModel):

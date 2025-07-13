@@ -2,7 +2,6 @@
 File service for handling file uploads and downloads
 """
 
-import os
 import hashlib
 import shutil
 from typing import Optional, List, Tuple

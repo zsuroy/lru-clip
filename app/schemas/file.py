@@ -2,7 +2,7 @@
 File-related Pydantic schemas
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
@@ -28,7 +28,8 @@ class FileResponse(BaseModel):
     clip_id: Optional[int]
     
     class Config:
-        from_attributes = True
+        model_validate = True
+        orm_mode = True
 
 
 class FileUploadResponse(BaseModel):

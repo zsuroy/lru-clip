@@ -2,7 +2,6 @@
 Tests for admin endpoints
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 

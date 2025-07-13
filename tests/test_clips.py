@@ -2,9 +2,7 @@
 Tests for clip management endpoints
 """
 
-import pytest
 from fastapi.testclient import TestClient
-from app.models.clip import ClipType, AccessLevel
 
 
 class TestClipEndpoints:

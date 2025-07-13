@@ -8,12 +8,10 @@ from datetime import datetime
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, and_, or_
-from fastapi import HTTPException, status
 
 from app.models.clip import Clip, AccessLevel, ClipType
 from app.models.user import User
 from app.schemas.clip import ClipCreate, ClipUpdate
-from app.services.auth import auth_service
 
 
 class ClipService:
@@ -79,7 +77,7 @@ class ClipService:
         
         if clip:
             # Check if expired
-            if clip.expires_at and clip.expires_at < datetime.utcnow():
+            if clip.expires_at and clip.expires_at < datetime.now(datetime.UTC):
                 return None
             
             clip.update_access()

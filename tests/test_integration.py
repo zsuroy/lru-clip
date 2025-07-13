@@ -2,7 +2,6 @@
 Integration tests for complete workflows
 """
 
-import pytest
 import io
 from fastapi.testclient import TestClient
 

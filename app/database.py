@@ -6,12 +6,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pydantic_settings import BaseSettings
-import os
 
 
 class Settings(BaseSettings):
     """Application settings"""
-    database_url: str = "mysql://root@localhost:3306/cliplru"
+    database_url: str = "mysql://root:password@localhost:3306/cliplru"
     secret_key: str = "your-secret-key-change-in-production"
     jwt_expire_minutes: int = 1440  # 24 hours
     storage_path: str = "./uploads"
