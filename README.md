@@ -10,6 +10,7 @@ CLIP.LRU is a next-generation clipboard management system that combines powerful
 - **Multi-format Support** - Text, Markdown, images, videos, audio files and more
 - **Smart Caching** - Automatic LRU-based cleanup with pinning capability
 - **Secure Sharing** - Granular access controls (public/private/encrypted)
+- **Anonymous Access** - Use without registration with configurable limits
 - **Cross-platform** - Web-first with API for all your devices
 
 ### Advanced Capabilities
@@ -39,28 +40,24 @@ venv\Scripts\activate     # Windows
 
 pip install -r requirements.txt
 
-# Frontend setup
-cd frontend
-npm install
-npm run build
-cd ..
-
 # Configuration
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your MySQL database settings
+
+# Initialize database
+python scripts/init_db.py
 ```
 
 ### Running the Development Server
 ```bash
-# Start backend
-uvicorn app.main:app --reload
+# Start backend server
+python scripts/start_server.py
 
-# In another terminal, start frontend
-cd frontend
-npm run dev
+# Or manually:
+uvicorn app.main:app --reload
 ```
 
-Visit `http://localhost:3000` in your browser.
+Visit `http://localhost:8000/docs` for API documentation.
 
 ## 🧩 Tech Stack
 - **Backend**: FastAPI (Python 3.13+)
@@ -75,12 +72,27 @@ Interactive API docs available at:
 - Swagger UI: `http://localhost:8000/docs`
 - Redoc: `http://localhost:8000/redoc`
 
-Example API request:
+Example API requests:
+
+**Registered User:**
 ```bash
 curl -X POST "http://localhost:8000/api/clips" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"content":"Hello World","type":"text","is_pinned":false}'
+  -d '{"content":"Hello World","clip_type":"text","access_level":"private"}'
+```
+
+**Anonymous User:**
+```bash
+# Create anonymous session
+curl -X POST "http://localhost:8000/api/auth/anonymous"
+# Returns: {"session_id": "abc123...", "user": {...}}
+
+# Use session ID for requests
+curl -X POST "http://localhost:8000/api/clips" \
+  -H "X-Session-Id: abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Anonymous Hello","clip_type":"text","access_level":"public"}'
 ```
 
 ## 🔧 Configuration
@@ -91,18 +103,32 @@ Key environment variables:
 DATABASE_URL=mysql://user:pass@localhost:3306/cliplru
 
 # Storage
-STORAGE_TYPE=local  # or 's3'
 STORAGE_PATH=./uploads
+MAX_FILE_SIZE=104857600
 
 # Security
 SECRET_KEY=your-secret-key
 JWT_EXPIRE_MINUTES=1440
+
+# Anonymous Users
+ALLOW_ANONYMOUS=true
+ANONYMOUS_MAX_CLIPS=100
+ANONYMOUS_MAX_FILE_SIZE=10485760
+ANONYMOUS_STORAGE_QUOTA=104857600
+ANONYMOUS_CLIP_EXPIRE_HOURS=24
 ```
 
 ## 🧪 Testing
 
 Run the test suite:
 ```bash
+# Run all tests with coverage
+python scripts/run_tests.py
+
+# Run specific test file
+python scripts/run_tests.py tests/test_auth.py
+
+# Or manually:
 pytest tests/ --cov=app --cov-report=html
 ```
 
