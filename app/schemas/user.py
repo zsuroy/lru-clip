@@ -39,9 +39,9 @@ class UserResponse(UserBase):
     max_clips: int
     storage_quota: int
 
-    class Config:
-        model_validate = True
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class UserUpdate(BaseModel):

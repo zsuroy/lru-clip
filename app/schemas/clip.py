@@ -40,10 +40,10 @@ class FileInfo(BaseModel):
     file_size: int
     mime_type: str
     created_at: datetime
-    
-    class Config:
-        model_validate = True
-        orm_mode = True
+
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class ClipResponse(ClipBase):
@@ -58,10 +58,10 @@ class ClipResponse(ClipBase):
     expires_at: Optional[datetime]
     owner_id: int
     files: List[FileInfo] = []
-    
-    class Config:
-        model_validate = True
-        orm_mode = True
+
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class ClipListResponse(BaseModel):

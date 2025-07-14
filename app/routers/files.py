@@ -39,7 +39,7 @@ def upload_file(
     db_file = file_service.upload_file(db, file, current_user, clip)
     
     return FileUploadResponse(
-        file=FileResponseSchema.from_orm(db_file),
+        file=FileResponseSchema.model_validate(db_file),
         message="File uploaded successfully"
     )
 
@@ -59,7 +59,7 @@ def get_files(
     )
     
     return FileListResponse(
-        files=[FileResponseSchema.from_orm(f) for f in files],
+        files=[FileResponseSchema.model_validate(f) for f in files],
         total=total,
         page=page,
         per_page=per_page,
@@ -82,7 +82,7 @@ def get_file_info(
             detail="File not found"
         )
     
-    return FileResponseSchema.from_orm(file_obj)
+    return FileResponseSchema.model_validate(file_obj)
 
 
 @router.get("/{file_id}/download")

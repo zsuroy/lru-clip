@@ -44,10 +44,10 @@ def get_storage_stats(
     total_files = db.query(File).count()
     
     # Get storage usage
+    from sqlalchemy import func
     total_storage = db.query(func.sum(File.file_size)).scalar() or 0
     
     # Get top users by storage
-    from sqlalchemy import func
     top_users = db.query(
         User.username,
         func.sum(File.file_size).label('storage_used')

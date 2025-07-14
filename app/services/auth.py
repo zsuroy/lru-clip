@@ -3,7 +3,7 @@ Authentication service for user management and JWT tokens
 """
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -36,9 +36,9 @@ class AuthService:
         """Create a JWT access token"""
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.now(datetime.UTC) + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.now(datetime.UTC) + timedelta(minutes=self.access_token_expire_minutes)
+            expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
         
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
@@ -79,7 +79,7 @@ class AuthService:
             return None
         
         # Update last login
-        user.last_login = datetime.now(datetime.UTC)
+        user.last_login = datetime.now(timezone.utc)
         db.commit()
         
         return user
@@ -153,7 +153,7 @@ class AuthService:
 
     def cleanup_expired_anonymous_users(self, db: Session) -> int:
         """Clean up expired anonymous users"""
-        expire_time = datetime.now(datetime.UTC) - timedelta(hours=settings.anonymous_clip_expire_hours)
+        expire_time = datetime.now(timezone.utc) - timedelta(hours=settings.anonymous_clip_expire_hours)
 
         expired_users = db.query(User).filter(
             User.is_anonymous == True,

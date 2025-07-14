@@ -204,10 +204,14 @@ class TestFileEndpoints:
         assert file1["original_filename"] == "file1.txt"
         assert file2["original_filename"] == "file2.txt"
     
-    def test_unauthorized_file_access(self, client: TestClient):
-        """Test accessing files without authentication"""
+    def test_unauthorized_file_access(self, client: TestClient, monkeypatch):
+        """Test accessing files without authentication when anonymous access is disabled"""
+        # Temporarily disable anonymous access
+        from app.database import settings
+        monkeypatch.setattr(settings, "allow_anonymous", False)
+
         response = client.get("/api/files/")
         assert response.status_code == 401
-        
+
         response = client.post("/api/files/upload")
         assert response.status_code == 401

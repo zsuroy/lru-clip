@@ -126,7 +126,7 @@ class ClipService:
             return None
         
         # Update fields
-        update_data = clip_update.dict(exclude_unset=True)
+        update_data = clip_update.model_dump(exclude_unset=True)
         
         # Handle password change for encrypted clips
         if "password" in update_data and update_data["password"]:

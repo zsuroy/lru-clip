@@ -40,7 +40,7 @@ def create_clip(
             )
     
     clip = clip_service.create_clip(db, clip_create, current_user)
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.get("/", response_model=ClipListResponse)
@@ -62,7 +62,7 @@ def get_clips(
     )
     
     return ClipListResponse(
-        clips=[ClipResponse.from_orm(clip) for clip in clips],
+        clips=[ClipResponse.model_validate(clip) for clip in clips],
         total=total,
         page=page,
         per_page=per_page,
@@ -85,7 +85,7 @@ def get_clip(
             detail="Clip not found"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.put("/{clip_id}", response_model=ClipResponse)
@@ -103,7 +103,7 @@ def update_clip(
             detail="Clip not found"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.delete("/{clip_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -135,7 +135,7 @@ def pin_clip(
             detail="Clip not found"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.delete("/{clip_id}/pin", response_model=ClipResponse)
@@ -152,7 +152,7 @@ def unpin_clip(
             detail="Clip not found"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.get("/shared/{share_token}", response_model=ClipResponse)
@@ -168,7 +168,7 @@ def get_shared_clip(
             detail="Shared clip not found or expired"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)
 
 
 @router.post("/shared/{share_token}/access", response_model=ClipResponse)
@@ -197,4 +197,4 @@ def access_encrypted_clip(
             detail="Incorrect password"
         )
     
-    return ClipResponse.from_orm(clip)
+    return ClipResponse.model_validate(clip)

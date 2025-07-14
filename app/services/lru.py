@@ -2,10 +2,10 @@
 LRU service for managing automatic cleanup of clips
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.models.clip import Clip
 from app.models.user import User
@@ -20,19 +20,33 @@ class LRUService:
     
     def get_clips_for_cleanup(self, db: Session, user: User) -> List[Clip]:
         """Get clips that should be cleaned up based on LRU policy"""
-        # Get all non-pinned clips for user, ordered by last access (oldest first)
-        clips = db.query(Clip).filter(
+        # Get total non-expired clips count for user (expired clips are handled separately)
+        now = datetime.now(timezone.utc)
+        total_clips = db.query(Clip).filter(
             and_(
                 Clip.owner_id == user.id,
-                Clip.is_pinned == False
+                or_(Clip.expires_at.is_(None), Clip.expires_at > now)
+            )
+        ).count()
+
+        # If user is within limit, no cleanup needed
+        if total_clips <= user.max_clips:
+            return []
+
+        # Get all non-pinned, non-expired clips for user, ordered by last access (oldest first)
+        unpinned_clips = db.query(Clip).filter(
+            and_(
+                Clip.owner_id == user.id,
+                Clip.is_pinned == False,
+                or_(Clip.expires_at.is_(None), Clip.expires_at > now)
             )
         ).order_by(Clip.last_accessed).all()
-        
-        # If user has more clips than allowed, return excess clips for cleanup
-        if len(clips) > user.max_clips:
-            return clips[:len(clips) - user.max_clips]
-        
-        return []
+
+        # Calculate how many clips to delete
+        clips_to_delete = total_clips - user.max_clips
+
+        # Return the oldest unpinned clips for deletion
+        return unpinned_clips[:clips_to_delete]
     
     def cleanup_user_clips(self, db: Session, user: User) -> int:
         """Clean up excess clips for a user based on LRU policy"""
@@ -41,7 +55,13 @@ class LRUService:
         deleted_count = 0
         for clip in clips_to_delete:
             # Additional check: don't delete recently created clips (less than 1 hour old)
-            if clip.created_at > datetime.now(datetime.UTC) - timedelta(hours=1):
+            # Handle timezone-aware comparison
+            now_utc = datetime.now(timezone.utc)
+            clip_created_at = clip.created_at
+            if clip_created_at.tzinfo is None:
+                clip_created_at = clip_created_at.replace(tzinfo=timezone.utc)
+
+            if clip_created_at > now_utc - timedelta(hours=1):
                 continue
             
             db.delete(clip)
@@ -54,7 +74,7 @@ class LRUService:
     
     def cleanup_expired_clips(self, db: Session) -> int:
         """Clean up expired clips across all users"""
-        now = datetime.now(datetime.UTC)
+        now = datetime.now(timezone.utc)
         expired_clips = db.query(Clip).filter(
             and_(
                 Clip.expires_at.isnot(None),
@@ -106,7 +126,7 @@ class LRUService:
         deleted_users = auth_service.cleanup_expired_anonymous_users(db)
 
         # Also clean up anonymous clips that have expired individually
-        expire_time = datetime.now(datetime.UTC) - timedelta(hours=settings.anonymous_clip_expire_hours)
+        expire_time = datetime.now(timezone.utc) - timedelta(hours=settings.anonymous_clip_expire_hours)
 
         expired_clips = db.query(Clip).join(User).filter(
             and_(

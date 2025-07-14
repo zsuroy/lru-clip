@@ -31,7 +31,7 @@ def register(user_create: UserCreate, db: Session = Depends(get_db)):
         access_token=access_token,
         token_type="bearer",
         expires_in=auth_service.access_token_expire_minutes * 60,
-        user=UserResponse.from_orm(user)
+        user=UserResponse.model_validate(user)
     )
 
 
@@ -63,14 +63,14 @@ def login(user_login: UserLogin, db: Session = Depends(get_db)):
         access_token=access_token,
         token_type="bearer",
         expires_in=auth_service.access_token_expire_minutes * 60,
-        user=UserResponse.from_orm(user)
+        user=UserResponse.model_validate(user)
     )
 
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user = Depends(require_authenticated_user)):
     """Get current user information (requires registered account)"""
-    return UserResponse.from_orm(current_user)
+    return UserResponse.model_validate(current_user)
 
 
 @router.post("/refresh", response_model=Token)
@@ -86,7 +86,7 @@ def refresh_token(current_user = Depends(get_current_active_user)):
         access_token=access_token,
         token_type="bearer",
         expires_in=auth_service.access_token_expire_minutes * 60,
-        user=UserResponse.from_orm(current_user)
+        user=UserResponse.model_validate(current_user)
     )
 
 
@@ -104,7 +104,7 @@ def create_anonymous_session(db: Session = Depends(get_db)):
 
     return AnonymousSessionResponse(
         session_id=user.session_id,
-        user=UserResponse.from_orm(user)
+        user=UserResponse.model_validate(user)
     )
 
 
@@ -121,5 +121,5 @@ def get_auth_status(current_user = Depends(get_current_user_optional)):
     return {
         "authenticated": True,
         "anonymous_allowed": settings.allow_anonymous,
-        "user": UserResponse.from_orm(current_user)
+        "user": UserResponse.model_validate(current_user)
     }

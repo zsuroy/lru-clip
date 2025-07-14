@@ -78,7 +78,7 @@ class TestAdminEndpoints:
     def test_admin_endpoints_no_auth(self, client: TestClient):
         """Test admin endpoints without authentication"""
         response = client.post("/api/admin/cleanup/lru")
-        assert response.status_code == 401
-        
+        assert response.status_code == 403
+
         response = client.get("/api/admin/stats/storage")
-        assert response.status_code == 401
+        assert response.status_code == 403

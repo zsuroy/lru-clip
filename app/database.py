@@ -1,9 +1,8 @@
 """
 Database configuration and session management for CLIP.LRU
 """
-
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from pydantic import ConfigDict
+from sqlalchemy import create_engine, orm
 from sqlalchemy.orm import sessionmaker
 from pydantic_settings import BaseSettings
 
@@ -26,8 +25,7 @@ class Settings(BaseSettings):
     anonymous_storage_quota: int = 100 * 1024 * 1024  # 100MB for anonymous users
     anonymous_clip_expire_hours: int = 24  # Anonymous clips expire after 24 hours
 
-    class Config:
-        env_file = ".env"
+    model_config = ConfigDict(env_file=".env")
 
 
 settings = Settings()
@@ -44,7 +42,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create base class for models
-Base = declarative_base()
+Base = orm.declarative_base()
 
 
 def get_db():

@@ -15,10 +15,10 @@ sys.path.insert(0, str(project_root))
 def run_tests():
     """Run all tests with coverage"""
     print("Running CLIP.LRU test suite...")
-    
+
     # Test command with coverage
     cmd = [
-        "python", "-m", "pytest",
+        sys.executable, "-m", "pytest",
         "tests/",
         "-v",
         "--cov=app",
@@ -40,9 +40,9 @@ def run_tests():
 def run_specific_test(test_path):
     """Run a specific test file or test function"""
     print(f"Running specific test: {test_path}")
-    
+
     cmd = [
-        "python", "-m", "pytest",
+        sys.executable, "-m", "pytest",
         test_path,
         "-v"
     ]
@@ -58,6 +58,7 @@ def run_specific_test(test_path):
 
 def main():
     """Main function"""
+    print(sys.argv)
     if len(sys.argv) > 1:
         # Run specific test
         test_path = sys.argv[1]

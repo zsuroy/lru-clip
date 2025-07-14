@@ -26,10 +26,10 @@ class FileResponse(BaseModel):
     created_at: datetime
     owner_id: int
     clip_id: Optional[int]
-    
-    class Config:
-        model_validate = True
-        orm_mode = True
+
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class FileUploadResponse(BaseModel):
