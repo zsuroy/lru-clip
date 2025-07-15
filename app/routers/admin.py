@@ -2,15 +2,14 @@
 Admin routes for system management
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db, settings
-from app.services.lru import lru_service
 from app.services.auth import auth_service
+from app.services.lru import lru_service
 from app.utils.auth import get_current_admin_user
-
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 

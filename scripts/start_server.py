@@ -3,9 +3,8 @@
 Development server startup script for CLIP.LRU
 """
 
-import sys
-import os
 import subprocess
+import sys
 from pathlib import Path
 
 # Add the project root to Python path

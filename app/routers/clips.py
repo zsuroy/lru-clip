@@ -3,20 +3,19 @@ Clip management routes
 """
 
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.clip import ClipType, AccessLevel
 from app.schemas.clip import (
-    ClipCreate, ClipUpdate, ClipResponse, ClipListResponse, 
-    ClipShareRequest, ClipAccessRequest
+    ClipCreate, ClipUpdate, ClipResponse, ClipListResponse,
+    ClipAccessRequest
 )
 from app.services.clip import clip_service
 from app.services.lru import lru_service
-from app.utils.auth import get_current_active_user, get_current_user_or_anonymous, require_authenticated_user
-from app.utils.pagination import paginate_query
-
+from app.utils.auth import get_current_user_or_anonymous
 
 router = APIRouter(prefix="/clips", tags=["Clips"])
 
