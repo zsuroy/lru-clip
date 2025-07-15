@@ -2,15 +2,17 @@
 Main FastAPI application for CLIP.LRU
 """
 
-from fastapi import FastAPI, HTTPException, Request
+import logging
+import os
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import logging
 
 from app.database import create_tables, settings
+from app.frontend import setup_frontend, get_frontend_info, validate_frontend_setup
 from app.routers import auth_router, clips_router, files_router, admin_router
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,9 +34,21 @@ async def lifespan(app: FastAPI):
         raise
     
     # Create uploads directory
-    import os
     os.makedirs(settings.storage_path, exist_ok=True)
     logger.info(f"Storage directory created: {settings.storage_path}")
+
+    # Validate frontend setup
+    frontend_valid, frontend_issues = validate_frontend_setup()
+    if frontend_valid:
+        logger.info("Frontend validation passed")
+    else:
+        logger.warning("Frontend validation issues found:")
+        for issue in frontend_issues:
+            logger.warning(f"  - {issue}")
+
+    # Log frontend info
+    frontend_info = get_frontend_info()
+    logger.info(f"Frontend info: {frontend_info}")
     
     yield
     
@@ -85,7 +99,7 @@ async def health_check():
 
 
 # Root endpoint
-@app.get("/")
+@app.get("/info")
 async def root():
     """Root endpoint"""
     return {
@@ -107,6 +121,19 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(clips_router, prefix="/api")
 app.include_router(files_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+
+# Setup frontend (static files and page routes)
+frontend_config = setup_frontend(app)
+
+# Add frontend status endpoint
+@app.get("/api/frontend/status", tags=["system"])
+async def get_frontend_status():
+    """Get frontend configuration status"""
+    return {
+        "status": "ok",
+        "frontend_config": frontend_config.get_info(),
+        "frontend_info": get_frontend_info()
+    }
 
 
 if __name__ == "__main__":

@@ -207,7 +207,7 @@ class TestFileEndpoints:
     def test_unauthorized_file_access(self, client: TestClient, monkeypatch):
         """Test accessing files without authentication when anonymous access is disabled"""
         # Temporarily disable anonymous access
-        from app.database import settings
+        from app.config import settings
         monkeypatch.setattr(settings, "allow_anonymous", False)
 
         response = client.get("/api/files/")

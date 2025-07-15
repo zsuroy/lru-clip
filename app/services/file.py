@@ -12,7 +12,7 @@ from fastapi import UploadFile, HTTPException, status
 from app.models.file import File
 from app.models.user import User
 from app.models.clip import Clip
-from app.database import settings
+from app.config import settings
 
 
 class FileService:
@@ -152,7 +152,7 @@ class FileService:
         return file_obj
 
     def get_file_for_download(self, db: Session, file_id: int, user: User = None) -> Optional[File]:
-        """Get file for download - allows access to files in shared clips"""
+        """Get file for download - allows access to file in shared clips"""
         from app.models.clip import Clip, AccessLevel
 
         # First try to get file as owner

@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_
 
 from app.models.clip import Clip
 from app.models.user import User
-from app.database import settings
+from app.config import settings
 
 
 class LRUService:

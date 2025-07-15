@@ -4,7 +4,7 @@ Clip service for managing clipboard content
 
 import secrets
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, and_, or_
@@ -92,7 +92,7 @@ class ClipService:
         
         if clip:
             # Check if expired
-            if clip.expires_at and clip.expires_at < datetime.now(datetime.UTC):
+            if clip.expires_at and clip.expires_at < datetime.now(timezone.utc):
                 return None
             
             clip.update_access()

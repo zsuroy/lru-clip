@@ -12,7 +12,7 @@ from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.database import settings
+from app.config import settings
 
 
 class AuthService:

@@ -4,7 +4,7 @@ Tests for anonymous user functionality
 
 import io
 from fastapi.testclient import TestClient
-from app.database import settings
+from app.config import settings
 
 
 class TestAnonymousUser:
