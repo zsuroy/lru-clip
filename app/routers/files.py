@@ -92,7 +92,7 @@ def download_file(
     db: Session = Depends(get_db)
 ):
     """Download a file"""
-    file_obj = file_service.get_file_by_id(db, file_id, current_user)
+    file_obj = file_service.get_file_for_download(db, file_id, current_user)
     if not file_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

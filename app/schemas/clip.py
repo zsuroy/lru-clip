@@ -20,6 +20,7 @@ class ClipCreate(ClipBase):
     """Schema for creating a clip"""
     password: Optional[str] = Field(None, description="Password for encrypted clips")
     expires_at: Optional[datetime] = Field(None, description="Expiration time")
+    file_ids: Optional[List[int]] = Field(None, description="IDs of files to associate with the clip")
 
 
 class ClipUpdate(BaseModel):

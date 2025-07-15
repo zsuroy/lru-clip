@@ -101,7 +101,7 @@ class TestIntegrationWorkflows:
         # 2. Try to access without password (should fail)
         shared_response = client.get(f"/api/clips/shared/{share_token}")
         
-        assert shared_response.status_code == 200
+        assert shared_response.status_code == 401
         # Content should be accessible but password verification is needed for full access
         
         # 3. Access with correct password

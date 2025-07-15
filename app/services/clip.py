@@ -35,12 +35,12 @@ class ClipService:
         share_token = None
         if clip_create.access_level != AccessLevel.PRIVATE:
             share_token = self.generate_share_token()
-        
+
         # Hash password if encrypted
         password_hash = None
         if clip_create.access_level == AccessLevel.ENCRYPTED and clip_create.password:
             password_hash = self.hash_password(clip_create.password)
-        
+
         # Create clip
         db_clip = Clip(
             title=clip_create.title,
@@ -52,11 +52,26 @@ class ClipService:
             expires_at=clip_create.expires_at,
             owner_id=user.id
         )
-        
+
         db.add(db_clip)
         db.commit()
         db.refresh(db_clip)
-        
+
+        # Associate files if provided
+        if clip_create.file_ids:
+            from app.models.file import File
+            for file_id in clip_create.file_ids:
+                # Verify file belongs to user and update its clip_id
+                file_obj = db.query(File).filter(
+                    File.id == file_id,
+                    File.owner_id == user.id
+                ).first()
+                if file_obj:
+                    file_obj.clip_id = db_clip.id
+
+            db.commit()
+            db.refresh(db_clip)
+
         return db_clip
     
     def get_clip_by_id(self, db: Session, clip_id: int, user: User) -> Optional[Clip]:
@@ -95,8 +110,11 @@ class ClipService:
         search: Optional[str] = None
     ) -> Tuple[List[Clip], int]:
         """Get user's clips with pagination and filtering"""
-        query = db.query(Clip).filter(Clip.owner_id == user.id)
-        
+        if user.is_anonymous:
+            query = db.query(Clip).filter(Clip.access_level == AccessLevel.PUBLIC)
+        else:
+            query = db.query(Clip).filter(Clip.owner_id == user.id)
+
         # Filter by type
         if clip_type:
             query = query.filter(Clip.clip_type == clip_type)

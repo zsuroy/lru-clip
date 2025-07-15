@@ -167,7 +167,14 @@ def get_shared_clip(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Shared clip not found or expired"
         )
-    
+
+    # If clip is encrypted, require password authentication
+    if clip.access_level == AccessLevel.ENCRYPTED:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Password required for encrypted clip"
+        )
+
     return ClipResponse.model_validate(clip)
 
 

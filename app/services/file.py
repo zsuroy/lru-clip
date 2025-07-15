@@ -144,12 +144,46 @@ class FileService:
             File.id == file_id,
             File.owner_id == user.id
         ).first()
-        
+
         if file_obj:
             file_obj.update_download()
             db.commit()
-        
+
         return file_obj
+
+    def get_file_for_download(self, db: Session, file_id: int, user: User = None) -> Optional[File]:
+        """Get file for download - allows access to files in shared clips"""
+        from app.models.clip import Clip, AccessLevel
+
+        # First try to get file as owner
+        if user and not user.is_anonymous:
+            file_obj = db.query(File).filter(
+                File.id == file_id,
+                File.owner_id == user.id
+            ).first()
+
+            if file_obj:
+                file_obj.update_download()
+                db.commit()
+                return file_obj
+
+        # If not owner or anonymous, check if file is in a shared clip
+        file_obj = db.query(File).filter(File.id == file_id).first()
+        if not file_obj or not file_obj.clip_id:
+            return None
+
+        # Check if the clip is publicly accessible
+        clip = db.query(Clip).filter(Clip.id == file_obj.clip_id).first()
+        if not clip or clip.access_level == AccessLevel.PRIVATE:
+            return None
+
+        # For public and encrypted clips, allow download
+        if clip.access_level in [AccessLevel.PUBLIC, AccessLevel.ENCRYPTED]:
+            file_obj.update_download()
+            db.commit()
+            return file_obj
+
+        return None
     
     def get_file_path(self, file_obj: File) -> Path:
         """Get file path on disk"""
