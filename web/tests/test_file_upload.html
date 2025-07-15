@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Tests - CLIP.LRU</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #007bff;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .test-results.pass {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-results.fail {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .file-input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 CLIP.LRU File Upload Tests</h1>
+    
+    <div class="test-container">
+        <div class="test-header">
+            <h2>Test Suite: File Upload and Clip Creation</h2>
+            <p>Automated tests for file upload functionality and clip creation with files</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 1: Basic File Upload</h3>
+            <div class="file-input">
+                <input type="file" id="testFile1" />
+                <p>Select a file to test basic upload functionality</p>
+            </div>
+            <button class="button" onclick="runTest1()">Run Test 1</button>
+            <div id="test1Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 2: File Clip Creation</h3>
+            <p>This test will upload a file and create a file-type clip</p>
+            <button class="button" onclick="runTest2()">Run Test 2</button>
+            <div id="test2Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 3: Multiple File Upload</h3>
+            <div class="file-input">
+                <input type="file" id="testFiles3" multiple />
+                <p>Select multiple files to test batch upload</p>
+            </div>
+            <button class="button" onclick="runTest3()">Run Test 3</button>
+            <div id="test3Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 4: Encrypted File Clip</h3>
+            <p>Test creating an encrypted clip with file</p>
+            <input type="password" id="testPassword" placeholder="Enter password for encrypted clip" />
+            <button class="button" onclick="runTest4()">Run Test 4</button>
+            <div id="test4Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 5: File Download</h3>
+            <p>Test downloading files from clips</p>
+            <button class="button" onclick="runTest5()">Run Test 5</button>
+            <div id="test5Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Run All Tests</h3>
+            <button class="button success" onclick="runAllTests()">🚀 Run All Tests</button>
+            <button class="button danger" onclick="clearAllLogs()">🗑️ Clear Logs</button>
+            <div class="progress-bar">
+                <div id="overallProgress" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div id="testResults" class="test-results" style="display: none;">
+            <h3>Test Results Summary</h3>
+            <div id="resultsSummary"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let sessionId = null;
+        let testResults = [];
+        
+        // Utility functions
+        function log(testId, message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById(`${testId}Log`);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${testId}] ${message}`);
+        }
+        
+        function clearLog(testId) {
+            document.getElementById(`${testId}Log`).innerHTML = '';
+        }
+        
+        function clearAllLogs() {
+            for (let i = 1; i <= 5; i++) {
+                clearLog(`test${i}`);
+            }
+            document.getElementById('testResults').style.display = 'none';
+            testResults = [];
+        }
+        
+        function updateProgress(percentage) {
+            document.getElementById('overallProgress').style.width = `${percentage}%`;
+        }
+        
+        function showResults() {
+            const resultsDiv = document.getElementById('testResults');
+            const summaryDiv = document.getElementById('resultsSummary');
+            
+            const passed = testResults.filter(r => r.passed).length;
+            const total = testResults.length;
+            
+            resultsDiv.className = `test-results ${passed === total ? 'pass' : 'fail'}`;
+            resultsDiv.style.display = 'block';
+            
+            summaryDiv.innerHTML = `
+                <p><strong>Tests Passed: ${passed}/${total}</strong></p>
+                ${testResults.map(r => 
+                    `<p>${r.passed ? '✅' : '❌'} ${r.name}: ${r.message}</p>`
+                ).join('')}
+            `;
+        }
+        
+        async function getAuthHeaders() {
+            if (!sessionId) {
+                const response = await fetch(`${API_BASE}/auth/anonymous`, { method: 'POST' });
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionId = data.session_id;
+                }
+            }
+            return sessionId ? { 'X-Session-Id': sessionId } : {};
+        }
+        
+        // Test 1: Basic File Upload
+        async function runTest1() {
+            clearLog('test1');
+            log('test1', 'Starting Test 1: Basic File Upload', 'info');
+            
+            try {
+                const fileInput = document.getElementById('testFile1');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    // Create a test file
+                    const testContent = 'Test file content for upload test';
+                    const blob = new Blob([testContent], { type: 'text/plain' });
+                    const testFile = new File([blob], 'test1.txt', { type: 'text/plain' });
+                    
+                    log('test1', 'Using generated test file: test1.txt', 'info');
+                    await uploadFile('test1', testFile);
+                } else {
+                    log('test1', `Using selected file: ${file.name}`, 'info');
+                    await uploadFile('test1', file);
+                }
+                
+                testResults.push({ name: 'Test 1', passed: true, message: 'File upload successful' });
+                log('test1', '✅ Test 1 PASSED', 'success');
+            } catch (error) {
+                testResults.push({ name: 'Test 1', passed: false, message: error.message });
+                log('test1', `❌ Test 1 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 2: File Clip Creation
+        async function runTest2() {
+            clearLog('test2');
+            log('test2', 'Starting Test 2: File Clip Creation', 'info');
+            
+            try {
+                // Create test file
+                const testContent = 'Test file for clip creation';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const testFile = new File([blob], 'test2.txt', { type: 'text/plain' });
+                
+                // Upload file
+                const fileId = await uploadFile('test2', testFile);
+                
+                // Create clip with file
+                const headers = await getAuthHeaders();
+                const clipData = {
+                    title: 'Test File Clip',
+                    content: 'This is a test file clip',
+                    clip_type: 'file',
+                    access_level: 'public',
+                    file_ids: [fileId]
+                };
+                
+                log('test2', `Creating clip with file ID: ${fileId}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    log('test2', `✅ Clip created successfully: ID ${clip.id}`, 'success');
+                    log('test2', `📁 Files in clip: ${clip.files.length}`, 'info');
+                    if (clip.share_token) {
+                        log('test2', `🔗 Share URL: ${window.location.origin}/shared/${clip.share_token}`, 'info');
+                    }
+                    
+                    testResults.push({ name: 'Test 2', passed: true, message: 'File clip creation successful' });
+                } else {
+                    const error = await response.text();
+                    throw new Error(`Clip creation failed: ${response.status} - ${error}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 2', passed: false, message: error.message });
+                log('test2', `❌ Test 2 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Multiple File Upload
+        async function runTest3() {
+            clearLog('test3');
+            log('test3', 'Starting Test 3: Multiple File Upload', 'info');
+            
+            try {
+                const fileInput = document.getElementById('testFiles3');
+                let files = Array.from(fileInput.files);
+                
+                if (files.length === 0) {
+                    // Create multiple test files
+                    files = [];
+                    for (let i = 1; i <= 3; i++) {
+                        const content = `Test file ${i} content`;
+                        const blob = new Blob([content], { type: 'text/plain' });
+                        const file = new File([blob], `test3_${i}.txt`, { type: 'text/plain' });
+                        files.push(file);
+                    }
+                    log('test3', 'Using generated test files', 'info');
+                }
+                
+                const fileIds = [];
+                for (const file of files) {
+                    const fileId = await uploadFile('test3', file);
+                    fileIds.push(fileId);
+                }
+                
+                // Create clip with multiple files
+                const headers = await getAuthHeaders();
+                const clipData = {
+                    title: 'Multi-File Test Clip',
+                    content: 'This clip contains multiple files',
+                    clip_type: 'file',
+                    access_level: 'public',
+                    file_ids: fileIds
+                };
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    log('test3', `✅ Multi-file clip created: ${clip.files.length} files`, 'success');
+                    testResults.push({ name: 'Test 3', passed: true, message: `Multiple file upload successful (${files.length} files)` });
+                } else {
+                    throw new Error(`Multi-file clip creation failed: ${response.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 3', passed: false, message: error.message });
+                log('test3', `❌ Test 3 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Encrypted File Clip
+        async function runTest4() {
+            clearLog('test4');
+            log('test4', 'Starting Test 4: Encrypted File Clip', 'info');
+            
+            try {
+                const password = document.getElementById('testPassword').value || 'test123';
+                
+                // Create test file
+                const testContent = 'Secret file content';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const testFile = new File([blob], 'secret.txt', { type: 'text/plain' });
+                
+                // Upload file
+                const fileId = await uploadFile('test4', testFile);
+                
+                // Create encrypted clip
+                const headers = await getAuthHeaders();
+                const clipData = {
+                    title: 'Encrypted Test Clip',
+                    content: 'This is an encrypted clip',
+                    clip_type: 'file',
+                    access_level: 'encrypted',
+                    password: password,
+                    file_ids: [fileId]
+                };
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    log('test4', `✅ Encrypted clip created: ID ${clip.id}`, 'success');
+                    
+                    // Test password access
+                    const accessResponse = await fetch(`${API_BASE}/clips/shared/${clip.share_token}/access`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    if (accessResponse.ok) {
+                        log('test4', '✅ Password access successful', 'success');
+                        testResults.push({ name: 'Test 4', passed: true, message: 'Encrypted file clip creation successful' });
+                    } else {
+                        throw new Error('Password access failed');
+                    }
+                } else {
+                    throw new Error(`Encrypted clip creation failed: ${response.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 4', passed: false, message: error.message });
+                log('test4', `❌ Test 4 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 5: File Download
+        async function runTest5() {
+            clearLog('test5');
+            log('test5', 'Starting Test 5: File Download', 'info');
+            
+            try {
+                // Create and upload test file
+                const testContent = 'Download test content';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const testFile = new File([blob], 'download_test.txt', { type: 'text/plain' });
+                
+                const fileId = await uploadFile('test5', testFile);
+                
+                // Create public clip
+                const headers = await getAuthHeaders();
+                const clipData = {
+                    title: 'Download Test Clip',
+                    content: 'Test file download',
+                    clip_type: 'file',
+                    access_level: 'public',
+                    file_ids: [fileId]
+                };
+                
+                const clipResponse = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (!clipResponse.ok) {
+                    throw new Error('Failed to create clip for download test');
+                }
+                
+                // Test file download
+                const downloadResponse = await fetch(`${API_BASE}/files/${fileId}/download`);
+                
+                if (downloadResponse.ok) {
+                    const downloadedContent = await downloadResponse.text();
+                    if (downloadedContent === testContent) {
+                        log('test5', '✅ File download successful and content matches', 'success');
+                        testResults.push({ name: 'Test 5', passed: true, message: 'File download successful' });
+                    } else {
+                        throw new Error('Downloaded content does not match original');
+                    }
+                } else {
+                    throw new Error(`File download failed: ${downloadResponse.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 5', passed: false, message: error.message });
+                log('test5', `❌ Test 5 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Helper function to upload file
+        async function uploadFile(testId, file) {
+            log(testId, `📤 Uploading file: ${file.name} (${file.size} bytes)`, 'info');
+            
+            const headers = await getAuthHeaders();
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch(`${API_BASE}/files/upload`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const fileId = data.file.id;
+                log(testId, `✅ File uploaded successfully: ID ${fileId}`, 'success');
+                return fileId;
+            } else {
+                const error = await response.text();
+                throw new Error(`File upload failed: ${response.status} - ${error}`);
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            clearAllLogs();
+            testResults = [];
+            
+            log('test1', '🚀 Starting automated test suite...', 'info');
+            
+            updateProgress(0);
+            await runTest1();
+            updateProgress(20);
+            
+            await runTest2();
+            updateProgress(40);
+            
+            await runTest3();
+            updateProgress(60);
+            
+            await runTest4();
+            updateProgress(80);
+            
+            await runTest5();
+            updateProgress(100);
+            
+            showResults();
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 File Upload Test Suite Loaded');
+        });
+    </script>
+</body>
+</html>

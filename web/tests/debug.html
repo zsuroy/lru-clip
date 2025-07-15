@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug File Upload - CLIP.LRU</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 CLIP.LRU Debug Tool</h1>
+    
+    <div class="section">
+        <h2>1. Session Management</h2>
+        <button class="button" onclick="createSession()">Create Anonymous Session</button>
+        <button class="button" onclick="checkSession()">Check Session Status</button>
+        <div id="sessionInfo" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. File Upload</h2>
+        <input type="file" id="fileInput" />
+        <button class="button" onclick="uploadFile()">Upload File</button>
+        <div id="uploadInfo" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Clip Creation</h2>
+        <input type="text" id="clipTitle" placeholder="Clip Title" />
+        <select id="clipType">
+            <option value="text">Text</option>
+            <option value="file">File</option>
+        </select>
+        <select id="accessLevel">
+            <option value="private">Private</option>
+            <option value="public">Public</option>
+            <option value="encrypted">Encrypted</option>
+        </select>
+        <input type="password" id="clipPassword" placeholder="Password (for encrypted)" />
+        <textarea id="clipContent" placeholder="Clip Content" rows="3"></textarea>
+        <br>
+        <button class="button" onclick="createClip()">Create Clip</button>
+        <div id="clipInfo" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Debug Log</h2>
+        <button class="button" onclick="clearLog()">Clear Log</button>
+        <div id="debugLog" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let sessionId = null;
+        let uploadedFileId = null;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('debugLog');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+        
+        function getAuthHeaders() {
+            const headers = {};
+            if (sessionId) {
+                headers['X-Session-Id'] = sessionId;
+            }
+            return headers;
+        }
+        
+        async function createSession() {
+            try {
+                log('Creating anonymous session...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/anonymous`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionId = data.session_id;
+                    log(`✅ Session created: ${sessionId}`, 'success');
+                    document.getElementById('sessionInfo').textContent = `Session ID: ${sessionId}`;
+                } else {
+                    const error = await response.text();
+                    log(`❌ Session creation failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Session creation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkSession() {
+            try {
+                log('Checking session status...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/status`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Session valid: ${JSON.stringify(data)}`, 'success');
+                    document.getElementById('sessionInfo').textContent = JSON.stringify(data, null, 2);
+                } else {
+                    log(`❌ Session check failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Session check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function uploadFile() {
+            try {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    log('❌ No file selected', 'error');
+                    return;
+                }
+                
+                if (!sessionId) {
+                    log('❌ No session. Create session first.', 'error');
+                    return;
+                }
+                
+                log(`📤 Uploading file: ${file.name} (${file.size} bytes)`, 'info');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch(`${API_BASE}/files/upload`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    uploadedFileId = data.file.id;
+                    log(`✅ File uploaded successfully: ID ${uploadedFileId}`, 'success');
+                    document.getElementById('uploadInfo').textContent = JSON.stringify(data, null, 2);
+                    
+                    // Auto-fill clip title
+                    document.getElementById('clipTitle').value = data.file.original_filename;
+                    document.getElementById('clipType').value = 'file';
+                } else {
+                    const error = await response.text();
+                    log(`❌ File upload failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ File upload error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createClip() {
+            try {
+                if (!sessionId) {
+                    log('❌ No session. Create session first.', 'error');
+                    return;
+                }
+                
+                const title = document.getElementById('clipTitle').value;
+                const content = document.getElementById('clipContent').value;
+                const clipType = document.getElementById('clipType').value;
+                const accessLevel = document.getElementById('accessLevel').value;
+                const password = document.getElementById('clipPassword').value;
+                
+                const clipData = {
+                    title: title || undefined,
+                    content: content || undefined,
+                    clip_type: clipType,
+                    access_level: accessLevel,
+                    password: password || undefined
+                };
+                
+                // Add file_ids if it's a file clip and we have an uploaded file
+                if (clipType === 'file' && uploadedFileId) {
+                    clipData.file_ids = [uploadedFileId];
+                    log(`📎 Adding file ID to clip: ${uploadedFileId}`, 'info');
+                } else if (clipType === 'file') {
+                    log('❌ File clip requires uploaded file', 'error');
+                    return;
+                }
+                
+                log(`📤 Creating clip: ${JSON.stringify(clipData)}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Clip created successfully: ID ${data.id}`, 'success');
+                    document.getElementById('clipInfo').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.share_token) {
+                        log(`🔗 Share URL: ${window.location.origin}/shared/${data.share_token}`, 'success');
+                    }
+                } else {
+                    const error = await response.text();
+                    log(`❌ Clip creation failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Clip creation error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-create session on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Debug tool loaded', 'info');
+            createSession();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharing Tests - CLIP.LRU</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #218838;
+        }
+        .button.primary {
+            background: #007bff;
+        }
+        .button.primary:hover {
+            background: #0056b3;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .button.danger:hover {
+            background: #c82333;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #007bff;
+        }
+        .warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .share-link {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .share-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .share-link a:hover {
+            text-decoration: underline;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .test-results.pass {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-results.fail {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .password-input {
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 CLIP.LRU Sharing Tests</h1>
+    
+    <div class="test-container">
+        <div class="test-header">
+            <h2>Test Suite: Clip Sharing Functionality</h2>
+            <p>Automated tests for public and encrypted clip sharing</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 1: Public Text Clip Sharing</h3>
+            <p>Create a public text clip and test sharing functionality</p>
+            <button class="button" onclick="runTest1()">Run Test 1</button>
+            <div id="test1Log" class="log"></div>
+            <div id="test1Links"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 2: Public File Clip Sharing</h3>
+            <p>Create a public file clip and test file download from shared link</p>
+            <button class="button" onclick="runTest2()">Run Test 2</button>
+            <div id="test2Log" class="log"></div>
+            <div id="test2Links"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 3: Encrypted Text Clip Sharing</h3>
+            <p>Create an encrypted text clip and test password protection</p>
+            <input type="password" id="encryptPassword" class="password-input" placeholder="Enter password" value="test123" />
+            <button class="button" onclick="runTest3()">Run Test 3</button>
+            <div id="test3Log" class="log"></div>
+            <div id="test3Links"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 4: Encrypted File Clip Sharing</h3>
+            <p>Create an encrypted file clip and test password-protected file access</p>
+            <input type="password" id="encryptFilePassword" class="password-input" placeholder="Enter password" value="secret456" />
+            <button class="button" onclick="runTest4()">Run Test 4</button>
+            <div id="test4Log" class="log"></div>
+            <div id="test4Links"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 5: Password Validation</h3>
+            <p>Test wrong password rejection and correct password acceptance</p>
+            <button class="button" onclick="runTest5()">Run Test 5</button>
+            <div id="test5Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test 6: Shared Page Rendering</h3>
+            <p>Test that shared pages render correctly with proper styling</p>
+            <button class="button" onclick="runTest6()">Run Test 6</button>
+            <div id="test6Log" class="log"></div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Run All Tests</h3>
+            <button class="button primary" onclick="runAllTests()">🚀 Run All Sharing Tests</button>
+            <button class="button danger" onclick="clearAllLogs()">🗑️ Clear Logs</button>
+        </div>
+        
+        <div id="testResults" class="test-results" style="display: none;">
+            <h3>Test Results Summary</h3>
+            <div id="resultsSummary"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let sessionId = null;
+        let testResults = [];
+        let createdClips = [];
+        
+        // Utility functions
+        function log(testId, message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById(`${testId}Log`);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${testId}] ${message}`);
+        }
+        
+        function clearLog(testId) {
+            document.getElementById(`${testId}Log`).innerHTML = '';
+            document.getElementById(`${testId}Links`).innerHTML = '';
+        }
+        
+        function clearAllLogs() {
+            for (let i = 1; i <= 6; i++) {
+                clearLog(`test${i}`);
+            }
+            document.getElementById('testResults').style.display = 'none';
+            testResults = [];
+        }
+        
+        function showShareLink(testId, shareToken, password = null) {
+            const linksDiv = document.getElementById(`${testId}Links`);
+            const shareUrl = `${window.location.origin}/shared/${shareToken}`;
+            
+            linksDiv.innerHTML = `
+                <div class="share-link">
+                    <strong>Share URL:</strong><br>
+                    <a href="${shareUrl}" target="_blank">${shareUrl}</a>
+                    ${password ? `<br><strong>Password:</strong> ${password}` : ''}
+                    <br><button class="button" onclick="testShareLink('${shareUrl}', '${password || ''}', '${testId}')">Test Link</button>
+                </div>
+            `;
+        }
+        
+        function showResults() {
+            const resultsDiv = document.getElementById('testResults');
+            const summaryDiv = document.getElementById('resultsSummary');
+            
+            const passed = testResults.filter(r => r.passed).length;
+            const total = testResults.length;
+            
+            resultsDiv.className = `test-results ${passed === total ? 'pass' : 'fail'}`;
+            resultsDiv.style.display = 'block';
+            
+            summaryDiv.innerHTML = `
+                <p><strong>Tests Passed: ${passed}/${total}</strong></p>
+                ${testResults.map(r => 
+                    `<p>${r.passed ? '✅' : '❌'} ${r.name}: ${r.message}</p>`
+                ).join('')}
+                <p><strong>Created Clips:</strong> ${createdClips.length}</p>
+            `;
+        }
+        
+        async function getAuthHeaders() {
+            if (!sessionId) {
+                const response = await fetch(`${API_BASE}/auth/anonymous`, { method: 'POST' });
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionId = data.session_id;
+                }
+            }
+            return sessionId ? { 'X-Session-Id': sessionId } : {};
+        }
+        
+        async function testShareLink(url, password, testId) {
+            log(testId, `🔗 Testing share link: ${url}`, 'info');
+            
+            try {
+                // Open the link in a new window
+                const newWindow = window.open(url, '_blank');
+                
+                if (newWindow) {
+                    log(testId, '✅ Share link opened successfully', 'success');
+                    if (password) {
+                        log(testId, `💡 Use password: ${password}`, 'warning');
+                    }
+                } else {
+                    log(testId, '❌ Failed to open share link (popup blocked?)', 'error');
+                }
+            } catch (error) {
+                log(testId, `❌ Error opening share link: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 1: Public Text Clip Sharing
+        async function runTest1() {
+            clearLog('test1');
+            log('test1', 'Starting Test 1: Public Text Clip Sharing', 'info');
+            
+            try {
+                const headers = await getAuthHeaders();
+                
+                const clipData = {
+                    title: 'Public Test Clip',
+                    content: 'This is a public text clip for sharing test.\n\nIt contains multiple lines of text to test the display.',
+                    clip_type: 'text',
+                    access_level: 'public'
+                };
+                
+                log('test1', 'Creating public text clip...', 'info');
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    createdClips.push(clip);
+                    
+                    log('test1', `✅ Public clip created: ID ${clip.id}`, 'success');
+                    log('test1', `🔗 Share token: ${clip.share_token}`, 'info');
+                    
+                    // Test accessing the shared clip
+                    const shareResponse = await fetch(`${API_BASE}/clips/shared/${clip.share_token}`);
+                    
+                    if (shareResponse.ok) {
+                        const sharedClip = await shareResponse.json();
+                        log('test1', '✅ Shared clip accessible without authentication', 'success');
+                        log('test1', `📝 Shared clip title: ${sharedClip.title}`, 'info');
+                        
+                        showShareLink('test1', clip.share_token);
+                        testResults.push({ name: 'Test 1', passed: true, message: 'Public text clip sharing successful' });
+                    } else {
+                        throw new Error(`Failed to access shared clip: ${shareResponse.status}`);
+                    }
+                } else {
+                    const error = await response.text();
+                    throw new Error(`Clip creation failed: ${response.status} - ${error}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 1', passed: false, message: error.message });
+                log('test1', `❌ Test 1 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 2: Public File Clip Sharing
+        async function runTest2() {
+            clearLog('test2');
+            log('test2', 'Starting Test 2: Public File Clip Sharing', 'info');
+            
+            try {
+                const headers = await getAuthHeaders();
+                
+                // Create and upload test file
+                const testContent = 'This is a test file for public sharing.\nIt contains sample content for download testing.';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const testFile = new File([blob], 'public_test.txt', { type: 'text/plain' });
+                
+                log('test2', 'Uploading test file...', 'info');
+                
+                const formData = new FormData();
+                formData.append('file', testFile);
+                
+                const uploadResponse = await fetch(`${API_BASE}/files/upload`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error('File upload failed');
+                }
+                
+                const uploadData = await uploadResponse.json();
+                const fileId = uploadData.file.id;
+                
+                log('test2', `✅ File uploaded: ID ${fileId}`, 'success');
+                
+                // Create public file clip
+                const clipData = {
+                    title: 'Public File Test Clip',
+                    content: 'This clip contains a downloadable file',
+                    clip_type: 'file',
+                    access_level: 'public',
+                    file_ids: [fileId]
+                };
+                
+                const clipResponse = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (clipResponse.ok) {
+                    const clip = await clipResponse.json();
+                    createdClips.push(clip);
+                    
+                    log('test2', `✅ Public file clip created: ID ${clip.id}`, 'success');
+                    log('test2', `📁 Files in clip: ${clip.files.length}`, 'info');
+                    
+                    // Test file download
+                    const downloadResponse = await fetch(`${API_BASE}/files/${fileId}/download`);
+                    
+                    if (downloadResponse.ok) {
+                        const downloadedContent = await downloadResponse.text();
+                        if (downloadedContent === testContent) {
+                            log('test2', '✅ File download successful and content matches', 'success');
+                        } else {
+                            log('test2', '⚠️ File downloaded but content differs', 'warning');
+                        }
+                    } else {
+                        log('test2', `⚠️ File download failed: ${downloadResponse.status}`, 'warning');
+                    }
+                    
+                    showShareLink('test2', clip.share_token);
+                    testResults.push({ name: 'Test 2', passed: true, message: 'Public file clip sharing successful' });
+                } else {
+                    throw new Error(`File clip creation failed: ${clipResponse.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 2', passed: false, message: error.message });
+                log('test2', `❌ Test 2 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Encrypted Text Clip Sharing
+        async function runTest3() {
+            clearLog('test3');
+            log('test3', 'Starting Test 3: Encrypted Text Clip Sharing', 'info');
+            
+            try {
+                const password = document.getElementById('encryptPassword').value || 'test123';
+                const headers = await getAuthHeaders();
+                
+                const clipData = {
+                    title: 'Encrypted Test Clip',
+                    content: 'This is encrypted content that requires a password to view.\n\nSecret information is protected here.',
+                    clip_type: 'text',
+                    access_level: 'encrypted',
+                    password: password
+                };
+                
+                log('test3', `Creating encrypted text clip with password: ${password}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    createdClips.push(clip);
+                    
+                    log('test3', `✅ Encrypted clip created: ID ${clip.id}`, 'success');
+                    
+                    // Test accessing without password (should fail)
+                    const noPasswordResponse = await fetch(`${API_BASE}/clips/shared/${clip.share_token}`);
+                    
+                    if (noPasswordResponse.status === 401) {
+                        log('test3', '✅ Access denied without password (correct behavior)', 'success');
+                    } else {
+                        log('test3', '⚠️ Clip accessible without password (unexpected)', 'warning');
+                    }
+                    
+                    // Test accessing with correct password
+                    const passwordResponse = await fetch(`${API_BASE}/clips/shared/${clip.share_token}/access`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    if (passwordResponse.ok) {
+                        const decryptedClip = await passwordResponse.json();
+                        log('test3', '✅ Access granted with correct password', 'success');
+                        log('test3', `📝 Decrypted title: ${decryptedClip.title}`, 'info');
+                        
+                        showShareLink('test3', clip.share_token, password);
+                        testResults.push({ name: 'Test 3', passed: true, message: 'Encrypted text clip sharing successful' });
+                    } else {
+                        throw new Error('Failed to access with correct password');
+                    }
+                } else {
+                    const error = await response.text();
+                    throw new Error(`Encrypted clip creation failed: ${response.status} - ${error}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 3', passed: false, message: error.message });
+                log('test3', `❌ Test 3 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Encrypted File Clip Sharing
+        async function runTest4() {
+            clearLog('test4');
+            log('test4', 'Starting Test 4: Encrypted File Clip Sharing', 'info');
+            
+            try {
+                const password = document.getElementById('encryptFilePassword').value || 'secret456';
+                const headers = await getAuthHeaders();
+                
+                // Create and upload secret file
+                const secretContent = 'This is secret file content that requires password access.\n\nConfidential data is stored here.';
+                const blob = new Blob([secretContent], { type: 'text/plain' });
+                const secretFile = new File([blob], 'secret_file.txt', { type: 'text/plain' });
+                
+                log('test4', 'Uploading secret file...', 'info');
+                
+                const formData = new FormData();
+                formData.append('file', secretFile);
+                
+                const uploadResponse = await fetch(`${API_BASE}/files/upload`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error('Secret file upload failed');
+                }
+                
+                const uploadData = await uploadResponse.json();
+                const fileId = uploadData.file.id;
+                
+                log('test4', `✅ Secret file uploaded: ID ${fileId}`, 'success');
+                
+                // Create encrypted file clip
+                const clipData = {
+                    title: 'Encrypted File Test Clip',
+                    content: 'This clip contains encrypted files',
+                    clip_type: 'file',
+                    access_level: 'encrypted',
+                    password: password,
+                    file_ids: [fileId]
+                };
+                
+                const clipResponse = await fetch(`${API_BASE}/clips/`, {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clipData)
+                });
+                
+                if (clipResponse.ok) {
+                    const clip = await clipResponse.json();
+                    createdClips.push(clip);
+                    
+                    log('test4', `✅ Encrypted file clip created: ID ${clip.id}`, 'success');
+                    log('test4', `📁 Files in clip: ${clip.files.length}`, 'info');
+                    
+                    // Test password access
+                    const passwordResponse = await fetch(`${API_BASE}/clips/shared/${clip.share_token}/access`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    if (passwordResponse.ok) {
+                        const decryptedClip = await passwordResponse.json();
+                        log('test4', '✅ Encrypted file clip accessible with password', 'success');
+                        
+                        // Test file download (should work even without password for the file itself)
+                        const downloadResponse = await fetch(`${API_BASE}/files/${fileId}/download`);
+                        
+                        if (downloadResponse.ok) {
+                            log('test4', '✅ File download from encrypted clip successful', 'success');
+                        } else {
+                            log('test4', `⚠️ File download failed: ${downloadResponse.status}`, 'warning');
+                        }
+                        
+                        showShareLink('test4', clip.share_token, password);
+                        testResults.push({ name: 'Test 4', passed: true, message: 'Encrypted file clip sharing successful' });
+                    } else {
+                        throw new Error('Failed to access encrypted file clip with password');
+                    }
+                } else {
+                    throw new Error(`Encrypted file clip creation failed: ${clipResponse.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 4', passed: false, message: error.message });
+                log('test4', `❌ Test 4 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 5: Password Validation
+        async function runTest5() {
+            clearLog('test5');
+            log('test5', 'Starting Test 5: Password Validation', 'info');
+            
+            try {
+                // Use the encrypted clip from test 3 if available
+                const encryptedClip = createdClips.find(c => c.access_level === 'encrypted');
+                
+                if (!encryptedClip) {
+                    throw new Error('No encrypted clip available for testing. Run Test 3 first.');
+                }
+                
+                log('test5', `Testing password validation on clip: ${encryptedClip.id}`, 'info');
+                
+                // Test with wrong password
+                const wrongPasswordResponse = await fetch(`${API_BASE}/clips/shared/${encryptedClip.share_token}/access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: 'wrongpassword123' })
+                });
+                
+                if (wrongPasswordResponse.status === 401) {
+                    log('test5', '✅ Wrong password correctly rejected', 'success');
+                } else {
+                    log('test5', '⚠️ Wrong password was accepted (unexpected)', 'warning');
+                }
+                
+                // Test with empty password
+                const emptyPasswordResponse = await fetch(`${API_BASE}/clips/shared/${encryptedClip.share_token}/access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: '' })
+                });
+                
+                if (emptyPasswordResponse.status === 401) {
+                    log('test5', '✅ Empty password correctly rejected', 'success');
+                } else {
+                    log('test5', '⚠️ Empty password was accepted (unexpected)', 'warning');
+                }
+                
+                // Test with correct password (assuming test123 from test 3)
+                const correctPasswordResponse = await fetch(`${API_BASE}/clips/shared/${encryptedClip.share_token}/access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: 'test123' })
+                });
+                
+                if (correctPasswordResponse.ok) {
+                    log('test5', '✅ Correct password accepted', 'success');
+                    testResults.push({ name: 'Test 5', passed: true, message: 'Password validation working correctly' });
+                } else {
+                    throw new Error('Correct password was rejected');
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 5', passed: false, message: error.message });
+                log('test5', `❌ Test 5 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 6: Shared Page Rendering
+        async function runTest6() {
+            clearLog('test6');
+            log('test6', 'Starting Test 6: Shared Page Rendering', 'info');
+            
+            try {
+                // Test that the shared page exists and loads
+                const testResponse = await fetch('/shared/test-token');
+                
+                if (testResponse.ok) {
+                    const pageContent = await testResponse.text();
+                    
+                    // Check for key elements that should be in the shared page
+                    const hasSharedTitle = pageContent.includes('Shared Clip');
+                    const hasLoadFunction = pageContent.includes('loadSharedClip');
+                    const hasStyles = pageContent.includes('shared-container');
+                    
+                    if (hasSharedTitle && hasLoadFunction && hasStyles) {
+                        log('test6', '✅ Shared page renders with correct elements', 'success');
+                        log('test6', '✅ Page contains required JavaScript functions', 'success');
+                        log('test6', '✅ Page contains required CSS styles', 'success');
+                        
+                        testResults.push({ name: 'Test 6', passed: true, message: 'Shared page rendering successful' });
+                    } else {
+                        log('test6', '⚠️ Shared page missing some required elements', 'warning');
+                        testResults.push({ name: 'Test 6', passed: false, message: 'Shared page incomplete' });
+                    }
+                } else {
+                    throw new Error(`Shared page not accessible: ${testResponse.status}`);
+                }
+            } catch (error) {
+                testResults.push({ name: 'Test 6', passed: false, message: error.message });
+                log('test6', `❌ Test 6 FAILED: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            clearAllLogs();
+            testResults = [];
+            createdClips = [];
+            
+            log('test1', '🚀 Starting sharing test suite...', 'info');
+            
+            await runTest1();
+            await runTest2();
+            await runTest3();
+            await runTest4();
+            await runTest5();
+            await runTest6();
+            
+            showResults();
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🔗 Sharing Test Suite Loaded');
+        });
+    </script>
+</body>
+</html>

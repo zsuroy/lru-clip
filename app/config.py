@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     anonymous_storage_quota: int = 100 * 1024 * 1024  # 100MB for anonymous users
     anonymous_clip_expire_hours: int = 24  # Anonymous clips expire after 24 hours
 
+    # Development and testing settings
+    enable_debug_pages: bool = False
+    enable_test_pages: bool = False
+
     model_config = ConfigDict(env_file=".env")
 
 

@@ -10,6 +10,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from app.config import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,22 +82,32 @@ class FrontendConfig:
             """Serve the shared clip page"""
             return self._serve_html_file("shared.html", "Shared clip page")
         
-        # Debug page (only in development)
-        @self.app.get("/debug", include_in_schema=False)
-        async def serve_debug_page():
-            """Serve the debug page"""
-            return self._serve_html_file("debug.html", "Debug page")
-        
-        # Test pages
-        @self.app.get("/tests/{test_name}", include_in_schema=False)
-        async def serve_test_page(test_name: str):
-            """Serve test pages"""
-            # Validate test name to prevent directory traversal
-            if not test_name.replace('_', '').replace('-', '').isalnum():
-                raise HTTPException(status_code=404, detail="Test page not found")
-            
-            test_file = f"tests/{test_name}.html"
-            return self._serve_html_file(test_file, f"Test page: {test_name}")
+        # Debug page (only if enabled)
+        if settings.enable_debug_pages:
+            @self.app.get("/debug", include_in_schema=False)
+            async def serve_debug_page():
+                """Serve the debug page"""
+                return self._serve_html_file("debug.html", "Debug page")
+
+            logger.info("Debug page enabled at /debug")
+        else:
+            logger.info("Debug page disabled (set ENABLE_DEBUG_PAGES=true to enable)")
+
+        # Test pages (only if enabled)
+        if settings.enable_test_pages:
+            @self.app.get("/tests/{test_name}", include_in_schema=False)
+            async def serve_test_page(test_name: str):
+                """Serve test pages"""
+                # Validate test name to prevent directory traversal
+                if not test_name.replace('_', '').replace('-', '').isalnum():
+                    raise HTTPException(status_code=404, detail="Test page not found")
+
+                test_file = f"tests/{test_name}.html"
+                return self._serve_html_file(test_file, f"Test page: {test_name}")
+
+            logger.info("Test pages enabled at /tests/*")
+        else:
+            logger.info("Test pages disabled (set ENABLE_TEST_PAGES=true to enable)")
         
         logger.info("Frontend page routes configured")
     
@@ -137,6 +149,8 @@ class FrontendConfig:
             "static_directory": str(self.static_dir) if self.static_dir else None,
             "available": self.web_dir is not None,
             "static_files_available": self.static_dir is not None,
+            "debug_pages_enabled": settings.enable_debug_pages,
+            "test_pages_enabled": settings.enable_test_pages,
         }
 
 

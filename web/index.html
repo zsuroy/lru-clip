@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLIP.LRU - Paste Before You Think</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fas fa-clipboard"></i>
+                    <span>CLIP.LRU</span>
+                </div>
+            </div>
+            
+            <div class="nav-center">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search clips...">
+                </div>
+            </div>
+            
+            <div class="nav-right">
+                <button class="btn btn-primary" id="newClipBtn">
+                    <i class="fas fa-plus"></i>
+                    New Clip
+                </button>
+                <div class="user-menu">
+                    <button class="btn btn-ghost" id="userMenuBtn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="user-info" id="userInfo">
+                            <div class="user-name">Anonymous User</div>
+                            <div class="user-status">Limited features</div>
+                        </div>
+                        <hr>
+                        <a href="#" id="loginBtn">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </a>
+                        <a href="#" id="registerBtn">
+                            <i class="fas fa-user-plus"></i>
+                            Sign Up
+                        </a>
+                        <a href="#" id="logoutBtn" style="display: none;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sign Out
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section" id="welcomeSection">
+            <div class="container">
+                <h1>Welcome to CLIP.LRU</h1>
+                <p class="subtitle">Paste Before You Think - Intelligent clipboard management with LRU caching</p>
+                
+                <!-- Anonymous User Prompt -->
+                <div class="anonymous-prompt" id="anonymousPrompt">
+                    <div class="prompt-content">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h3>You're using CLIP.LRU as an anonymous user</h3>
+                            <p>Create an account to unlock unlimited clips, larger file uploads, and more features.</p>
+                        </div>
+                        <button class="btn btn-primary" id="upgradeBtn">Upgrade Account</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clips Section -->
+        <section class="clips-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Your Clips</h2>
+                    <div class="filters">
+                        <select id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="text">Text</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="file">File</option>
+                            <option value="image">Image</option>
+                        </select>
+                        <select id="sortFilter">
+                            <option value="recent">Most Recent</option>
+                            <option value="accessed">Most Accessed</option>
+                            <option value="pinned">Pinned First</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Clips Grid -->
+                <div class="clips-grid" id="clipsGrid">
+                    <!-- Sample clips for demo -->
+                    <div class="clip-card" data-id="1">
+                        <div class="clip-header">
+                            <div class="clip-type">
+                                <i class="fas fa-file-text"></i>
+                                <span>Text</span>
+                            </div>
+                            <div class="clip-actions">
+                                <button class="btn-icon" title="Pin">
+                                    <i class="fas fa-thumbtack"></i>
+                                </button>
+                                <button class="btn-icon" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="btn-icon" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="clip-content">
+                            <h4>Welcome Note</h4>
+                            <p>Welcome to CLIP.LRU! This is your first clip. You can create, edit, and share clips easily.</p>
+                        </div>
+                        <div class="clip-footer">
+                            <span class="clip-time">2 minutes ago</span>
+                            <span class="clip-access">Private</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading clips...</span>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-clipboard"></i>
+                    <h3>No clips yet</h3>
+                    <p>Create your first clip to get started</p>
+                    <button class="btn btn-primary" onclick="showCreateModal()">
+                        <i class="fas fa-plus"></i>
+                        Create First Clip
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create/Edit Clip Modal -->
+    <div class="modal" id="clipModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Clip</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="clipForm">
+                    <div class="form-group">
+                        <label for="clipTitle">Title (optional)</label>
+                        <input type="text" id="clipTitle" placeholder="Enter clip title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clipType">Type</label>
+                        <select id="clipType">
+                            <option value="text">Text</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="file">File</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="contentGroup">
+                        <label for="clipContent">Content</label>
+                        <textarea id="clipContent" rows="8" placeholder="Paste or type your content here..."></textarea>
+                    </div>
+                    
+                    <div class="form-group" id="fileGroup" style="display: none;">
+                        <label>File Upload</label>
+                        <div class="file-upload" id="fileUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop files here or click to browse</p>
+                            <input type="file" id="fileInput" multiple>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <span id="progressText">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accessLevel">Access Level</label>
+                        <select id="accessLevel">
+                            <option value="private">Private</option>
+                            <option value="public">Public</option>
+                            <option value="encrypted">Encrypted</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="passwordGroup" style="display: none;">
+                        <label for="clipPassword">Password</label>
+                        <input type="password" id="clipPassword" placeholder="Enter password for encrypted clip">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveClipBtn">Save Clip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sign In</h3>
+                <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginUsername">Username or Email</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button>
+                <button class="btn btn-primary" id="loginSubmitBtn">Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Account</h3>
+                <button class="close-btn" onclick="closeRegisterModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regUsername">Username</label>
+                        <input type="text" id="regUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regFullName">Full Name (optional)</label>
+                        <input type="text" id="regFullName">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
+                <button class="btn btn-primary" id="registerSubmitBtn">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="static/js/script.js"></script>
+</body>
+</html>

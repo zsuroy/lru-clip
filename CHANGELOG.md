@@ -11,3 +11,5 @@ All notable changes to this project will be documented in this file.
 - 🆕 Basic admin endpoints for system management.
 - 🆕 Basic tests for API and services.
 - 🆕 Basic documentation with FastAPI's built-in docs.
+- 🆕 Initial frontend setup with HTML, CSS, and JavaScript.
+- 🆕 Basic frontend for testing and debugging.

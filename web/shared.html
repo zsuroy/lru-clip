@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Clip - CLIP.LRU</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --success-color: #10b981;
+            --success-dark: #059669;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+            margin: 0;
+            padding: 0;
+        }
+
+        .shared-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .shared-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .shared-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .shared-header .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .shared-header .back-link:hover {
+            background-color: var(--bg-secondary);
+            color: var(--primary-color);
+        }
+        
+        .shared-clip {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .clip-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .clip-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .clip-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .clip-content {
+            margin-bottom: 1.5rem;
+        }
+        
+        .clip-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .clip-text {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .file-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .file-details h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .file-details p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .download-btn {
+            padding: 0.5rem 1rem;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        
+        .download-btn:hover {
+            background: var(--success-dark);
+            transform: translateY(-1px);
+        }
+        
+        .password-prompt {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        .password-prompt .lock-icon {
+            font-size: 3rem;
+            color: var(--warning-color);
+            margin-bottom: 1rem;
+        }
+        
+        .password-form {
+            max-width: 300px;
+            margin: 2rem auto 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .password-input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--error-color);
+        }
+        
+        .error i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: var(--success-color);
+        }
+        
+        .toast.error {
+            background: var(--error-color);
+        }
+
+        .toast.info {
+            background: var(--primary-color);
+        }
+
+        .download-all-container {
+            margin-top: 1.5rem;
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="shared-container">
+        <div class="shared-header">
+            <h1><i class="fas fa-share-alt"></i> Shared Clip</h1>
+            <p>Someone shared this clip with you</p>
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                Back to CLIP.LRU
+            </a>
+        </div>
+        
+        <div id="clipContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading shared clip...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api';
+        
+        // Get share token from URL
+        function getShareToken() {
+            const path = window.location.pathname;
+            const match = path.match(/\/shared\/([^\/]+)/);
+            return match ? match[1] : null;
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Copy to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Failed to copy:', error);
+                showToast('Failed to copy to clipboard', 'error');
+            }
+        }
+        
+        // Download file with proper authentication
+        async function downloadFile(fileId, filename) {
+            try {
+                showToast('Starting download...', 'info');
+
+                const response = await fetch(`${API_BASE}/files/${fileId}/download`);
+
+                if (!response.ok) {
+                    throw new Error(`Download failed: ${response.status}`);
+                }
+
+                // Get filename from response headers if not provided
+                if (!filename) {
+                    const contentDisposition = response.headers.get('content-disposition');
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (!filename) {
+                        filename = `file-${fileId}`;
+                    }
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showToast('File downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('Failed to download file: ' + error.message, 'error');
+            }
+        }
+        
+        // Render shared clip
+        function renderSharedClip(clip) {
+            const container = document.getElementById('clipContainer');
+
+            let contentHtml = '';
+            if (clip.clip_type === 'file' && clip.files && clip.files.length > 0) {
+                contentHtml = `
+                    <div class="file-list">
+                        ${clip.files.map(file => `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">
+                                        <i class="fas fa-file"></i>
+                                    </div>
+                                    <div class="file-details">
+                                        <h4>${escapeHtml(file.original_filename || file.filename)}</h4>
+                                        <p>${formatFileSize(file.file_size || file.size)} • ${file.mime_type || 'Unknown type'}</p>
+                                    </div>
+                                </div>
+                                <button class="download-btn" onclick="downloadFile(${file.id}, '${escapeHtml(file.original_filename || file.filename)}')">
+                                    <i class="fas fa-download"></i>
+                                    Download
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                contentHtml = `
+                    <div class="clip-text">${escapeHtml(clip.content || 'No content')}</div>
+                `;
+            }
+
+            // Add a prominent download button for file clips
+            const downloadButton = clip.clip_type === 'file' && clip.files && clip.files.length > 0 ?
+                `<div class="download-all-container">
+                    <button class="btn btn-primary" onclick="downloadAllFiles()">
+                        <i class="fas fa-download"></i> Download All Files
+                    </button>
+                </div>` : '';
+            
+            container.innerHTML = `
+                <div class="shared-clip">
+                    <div class="clip-meta">
+                        <div class="clip-type-badge">
+                            <i class="fas fa-${getClipIcon(clip.clip_type)}"></i>
+                            ${clip.clip_type}
+                        </div>
+                        <div class="clip-actions">
+                            <button class="btn-action" onclick="copyClipContent()">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="clip-content">
+                        ${clip.title ? `<div class="clip-title">${escapeHtml(clip.title)}</div>` : ''}
+                        ${contentHtml}
+                        ${downloadButton}
+                    </div>
+
+                    <div class="clip-footer">
+                        <small>Shared on ${formatDate(clip.created_at)} • ${clip.access_level}</small>
+                    </div>
+                </div>
+            `;
+            
+            // Store clip for copying
+            window.currentClip = clip;
+        }
+        
+        // Get clip icon
+        function getClipIcon(type) {
+            const icons = {
+                'text': 'file-text',
+                'markdown': 'markdown',
+                'file': 'file',
+                'image': 'image'
+            };
+            return icons[type] || 'file';
+        }
+        
+        // Copy clip content
+        function copyClipContent() {
+            if (!window.currentClip) return;
+
+            let textToCopy = window.currentClip.content || '';
+
+            if (window.currentClip.clip_type === 'file' && window.currentClip.files && window.currentClip.files.length > 0) {
+                textToCopy = window.currentClip.files.map(file => file.original_filename || file.filename).join('\n');
+            }
+
+            copyToClipboard(textToCopy);
+        }
+
+        // Download all files
+        async function downloadAllFiles() {
+            if (!window.currentClip || !window.currentClip.files || window.currentClip.files.length === 0) {
+                showToast('No files to download', 'error');
+                return;
+            }
+
+            showToast(`Starting download of ${window.currentClip.files.length} files...`, 'info');
+
+            for (const file of window.currentClip.files) {
+                try {
+                    await downloadFile(file.id, file.original_filename || file.filename);
+                    // Add a small delay between downloads
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    console.error(`Failed to download file ${file.id}:`, error);
+                }
+            }
+        }
+        
+        // Render password prompt
+        function renderPasswordPrompt(shareToken) {
+            const container = document.getElementById('clipContainer');
+            
+            container.innerHTML = `
+                <div class="shared-clip">
+                    <div class="password-prompt">
+                        <i class="fas fa-lock lock-icon"></i>
+                        <h3>This clip is encrypted</h3>
+                        <p>Please enter the password to view this clip</p>
+                        <div class="password-form">
+                            <input type="password" id="clipPassword" class="password-input" placeholder="Enter password" />
+                            <button class="btn btn-primary" onclick="accessEncryptedClip('${shareToken}')">
+                                <i class="fas fa-unlock"></i>
+                                Access Clip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Focus password input
+            document.getElementById('clipPassword').focus();
+            
+            // Handle Enter key
+            document.getElementById('clipPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    accessEncryptedClip(shareToken);
+                }
+            });
+        }
+        
+        // Access encrypted clip
+        async function accessEncryptedClip(shareToken) {
+            const password = document.getElementById('clipPassword').value;
+            
+            if (!password) {
+                showToast('Please enter a password', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/clips/shared/${shareToken}/access`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    renderSharedClip(clip);
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || 'Incorrect password', 'error');
+                }
+            } catch (error) {
+                console.error('Error accessing encrypted clip:', error);
+                showToast('Failed to access clip', 'error');
+            }
+        }
+        
+        // Show error
+        function showError(message) {
+            const container = document.getElementById('clipContainer');
+            container.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            `;
+        }
+        
+        // Load shared clip
+        async function loadSharedClip() {
+            const shareToken = getShareToken();
+            
+            if (!shareToken) {
+                showError('Invalid share link');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/clips/shared/${shareToken}`);
+                
+                if (response.ok) {
+                    const clip = await response.json();
+                    renderSharedClip(clip);
+                } else if (response.status === 401) {
+                    // Encrypted clip, need password
+                    renderPasswordPrompt(shareToken);
+                } else {
+                    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    showError(error.detail || 'Shared clip not found or has expired');
+                }
+            } catch (error) {
+                console.error('Error loading shared clip:', error);
+                showError('Failed to load shared clip');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadSharedClip);
+    </script>
+</body>
+</html>
