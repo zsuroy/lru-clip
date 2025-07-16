@@ -13,3 +13,4 @@ All notable changes to this project will be documented in this file.
 - 🆕 Basic documentation with FastAPI's built-in docs.
 - 🆕 Initial frontend setup with HTML, CSS, and JavaScript.
 - 🆕 Basic frontend for testing and debugging.
+- 🆕 Basic markdown preview support.

@@ -35,6 +35,7 @@ class Clip(Base):
     content = Column(Text, nullable=True)  # For text/markdown content
     clip_type = Column(Enum(ClipType), nullable=False, default=ClipType.TEXT)
     access_level = Column(Enum(AccessLevel), nullable=False, default=AccessLevel.PRIVATE)
+    is_markdown = Column(Boolean, default=False)  # Whether content should be rendered as markdown
     
     # Security
     password_hash = Column(String(255), nullable=True)  # For encrypted clips

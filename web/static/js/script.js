@@ -257,7 +257,13 @@ function setupEventListeners() {
     
     // File upload
     setupFileUpload();
-    
+
+    // Global drag and drop for file upload
+    setupGlobalDragDrop();
+
+    // Markdown editor
+    setupMarkdownEditor();
+
     // Close modals on outside click
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
@@ -266,6 +272,122 @@ function setupEventListeners() {
             closeRegisterModal();
         }
     });
+}
+
+// Global drag and drop setup
+function setupGlobalDragDrop() {
+    let dragCounter = 0;
+
+    // Create drag overlay
+    const dragOverlay = document.createElement('div');
+    dragOverlay.id = 'dragOverlay';
+    dragOverlay.innerHTML = `
+        <div class="drag-overlay-content">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h2>Drop files here to upload</h2>
+            <p>Files will be uploaded and a new clip will be created</p>
+        </div>
+    `;
+    dragOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(59, 130, 246, 0.9);
+        color: white;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    `;
+
+    const overlayContent = dragOverlay.querySelector('.drag-overlay-content');
+    overlayContent.style.cssText = `
+        text-align: center;
+        padding: 2rem;
+        border: 3px dashed rgba(255, 255, 255, 0.8);
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+    `;
+
+    overlayContent.querySelector('i').style.cssText = `
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+    `;
+
+    overlayContent.querySelector('h2').style.cssText = `
+        margin: 1rem 0;
+        font-size: 2rem;
+    `;
+
+    overlayContent.querySelector('p').style.cssText = `
+        margin: 0;
+        opacity: 0.8;
+    `;
+
+    document.body.appendChild(dragOverlay);
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop area
+    ['dragenter', 'dragover'].forEach(eventName => {
+        document.addEventListener(eventName, handleDragEnter, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, handleDragLeave, false);
+    });
+
+    function handleDragEnter(e) {
+        dragCounter++;
+
+        // Only show overlay for file drags, not text/other content
+        if (e.dataTransfer.types.includes('Files')) {
+            dragOverlay.style.display = 'flex';
+        }
+    }
+
+    function handleDragLeave(e) {
+        dragCounter--;
+
+        if (dragCounter === 0) {
+            dragOverlay.style.display = 'none';
+        }
+    }
+
+    // Handle dropped files
+    document.addEventListener('drop', handleGlobalDrop, false);
+
+    async function handleGlobalDrop(e) {
+        dragCounter = 0;
+        dragOverlay.style.display = 'none';
+
+        const files = e.dataTransfer.files;
+
+        if (files.length > 0) {
+            // Show create modal with file type selected
+            showCreateModal();
+            document.getElementById('clipType').value = 'file';
+            handleClipTypeChange();
+
+            // Add files to selection
+            selectedFiles = Array.from(files);
+            updateFileDisplay();
+
+            showToast(`${files.length} file(s) ready for upload`, 'success');
+        }
+    }
 }
 
 // Authentication functions
@@ -456,10 +578,19 @@ async function loadClips() {
 
 async function saveClip() {
     const title = document.getElementById('clipTitle').value;
-    const content = document.getElementById('clipContent').value;
+
+    // Get content from CodeMirror or fallback to textarea
+    let content = '';
+    if (codeMirrorEditor) {
+        content = codeMirrorEditor.getValue();
+    } else {
+        content = document.getElementById('clipContent').value;
+    }
+
     const clipType = document.getElementById('clipType').value;
     const accessLevel = document.getElementById('accessLevel').value;
     const password = document.getElementById('clipPassword').value;
+    const isMarkdown = document.getElementById('isMarkdown').checked;
     const fileId = document.getElementById('clipForm').dataset.fileId;
     const fileIds = document.getElementById('clipForm').dataset.fileIds;
     const editId = document.getElementById('clipForm').dataset.editId;
@@ -480,7 +611,8 @@ async function saveClip() {
             content: content || undefined,
             clip_type: clipType,
             access_level: accessLevel,
-            password: password || undefined
+            password: password || undefined,
+            is_markdown: isMarkdown
         };
 
         // If it's a file clip, associate the uploaded files
@@ -653,7 +785,9 @@ function renderClips() {
                             </div>
                         `).join('')}
                     </div>` :
-                    `<p>${escapeHtml(clip.content || 'No content')}</p>`
+                    clip.is_markdown && clip.content ?
+                        renderClipContent(clip) :
+                        renderTextContent(clip.content)
                 }
             </div>
             <div class="clip-footer">
@@ -731,6 +865,17 @@ function closeModal() {
     // Re-setup file upload events
     setupFileUpload();
 
+    // Reset markdown state
+    document.getElementById('isMarkdown').checked = false;
+    // Close any open preview modal
+    closeEditorPreview();
+    toggleMarkdownMode(); // Reset markdown UI
+
+    // Clear CodeMirror content
+    if (codeMirrorEditor) {
+        codeMirrorEditor.setValue('');
+    }
+
     // Hide password group
     document.getElementById('passwordGroup').style.display = 'none';
 
@@ -771,13 +916,71 @@ function handleClipTypeChange() {
     const clipType = document.getElementById('clipType').value;
     const contentGroup = document.getElementById('contentGroup');
     const fileGroup = document.getElementById('fileGroup');
-    
+    const markdownCheckbox = document.getElementById('isMarkdown');
+    const editorControls = document.getElementById('editorControls');
+    const editorStatus = document.getElementById('editorStatus');
+
     if (clipType === 'file') {
         contentGroup.style.display = 'none';
         fileGroup.style.display = 'block';
+
+        // 隐藏 Markdown 相关功能
+        if (markdownCheckbox) {
+            markdownCheckbox.checked = false;
+            markdownCheckbox.closest('.checkbox-label').style.display = 'none';
+        }
+        if (editorControls) editorControls.style.display = 'none';
+        if (editorStatus) editorStatus.style.display = 'none';
+
+        // 重置编辑器模式
+        resetEditorToPlainText();
+
     } else {
         contentGroup.style.display = 'block';
         fileGroup.style.display = 'none';
+
+        // 显示 Markdown 相关功能（仅对 text 和 markdown 类型）
+        if (markdownCheckbox) {
+            if (clipType === 'markdown') {
+                // markdown 类型自动启用 markdown
+                markdownCheckbox.checked = true;
+                markdownCheckbox.closest('.checkbox-label').style.display = 'flex';
+                toggleMarkdownMode();
+            } else if (clipType === 'text') {
+                // text 类型显示 markdown 选项但不自动启用
+                markdownCheckbox.closest('.checkbox-label').style.display = 'flex';
+                // 如果之前没有选中，保持当前状态
+                toggleMarkdownMode();
+            } else {
+                // 其他类型隐藏 markdown 选项
+                markdownCheckbox.checked = false;
+                markdownCheckbox.closest('.checkbox-label').style.display = 'none';
+                if (editorControls) editorControls.style.display = 'none';
+                if (editorStatus) editorStatus.style.display = 'none';
+                resetEditorToPlainText();
+            }
+        }
+    }
+}
+
+function resetEditorToPlainText() {
+    const editorContainer = document.querySelector('.editor-container');
+
+    // 重置编辑器状态
+    closeEditorPreview(); // Close any open preview modal
+    if (isFullscreen) {
+        toggleFullscreen();
+    }
+
+    // 重置编辑器模式
+    if (codeMirrorEditor) {
+        codeMirrorEditor.setOption('mode', 'text/plain');
+        setTimeout(() => codeMirrorEditor.refresh(), 100);
+    }
+
+    // 移除 markdown 模式样式
+    if (editorContainer) {
+        editorContainer.classList.remove('markdown-mode');
     }
 }
 
@@ -1083,6 +1286,818 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Markdown rendering functions
+function renderMarkdown(content) {
+    if (!content) return '';
+
+    // Configure marked options
+    marked.setOptions({
+        highlight: function(code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return hljs.highlight(code, { language: lang }).value;
+                } catch (err) {}
+            }
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+
+    const html = marked.parse(content);
+
+    // 为代码块添加复制按钮
+    return addCopyButtonsToCodeBlocks(html);
+}
+
+// 为代码块添加复制按钮
+function addCopyButtonsToCodeBlocks(html) {
+    // 创建临时DOM元素来处理HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // 查找所有的pre元素（代码块）
+    const preElements = tempDiv.querySelectorAll('pre');
+
+    preElements.forEach((pre, index) => {
+        // 检查是否已经有复制按钮
+        if (pre.querySelector('.copy-code-btn')) return;
+
+        // 获取代码内容
+        const codeElement = pre.querySelector('code');
+        if (!codeElement) return;
+
+        // 创建复制按钮
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-code-btn';
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i><span>Copy</span>';
+        copyBtn.setAttribute('data-code-index', index);
+
+        // 添加按钮到pre元素
+        pre.appendChild(copyBtn);
+    });
+
+    return tempDiv.innerHTML;
+}
+
+// 复制代码到剪贴板
+async function copyCodeToClipboard(button, code) {
+    try {
+        await navigator.clipboard.writeText(code);
+
+        // 更新按钮状态
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+        button.classList.add('copied');
+
+        // 2秒后恢复原状
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('copied');
+        }, 2000);
+
+        showToast('Code copied to clipboard!', 'success');
+    } catch (error) {
+        console.error('Failed to copy code:', error);
+        showToast('Failed to copy code', 'error');
+    }
+}
+
+// 全局事件委托处理代码复制按钮
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.copy-code-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const button = e.target.closest('.copy-code-btn');
+        const pre = button.closest('pre');
+        const codeElement = pre.querySelector('code');
+
+        if (codeElement) {
+            copyCodeToClipboard(button, codeElement.textContent);
+        }
+    }
+});
+
+// 渲染 Markdown 内容（带截断）
+function renderClipContent(clip) {
+    const maxLength = 500; // 最大字符数
+    const content = clip.content || '';
+
+    if (content.length <= maxLength) {
+        return `<div class="markdown-content">${renderMarkdown(content)}</div>`;
+    }
+
+    // 截断内容
+    const truncatedContent = content.substring(0, maxLength);
+    const lastLineBreak = truncatedContent.lastIndexOf('\n');
+    const finalContent = lastLineBreak > maxLength * 0.7 ?
+        truncatedContent.substring(0, lastLineBreak) :
+        truncatedContent;
+
+    return `
+        <div class="markdown-content truncated" id="content-${clip.id}">
+            ${renderMarkdown(finalContent)}
+            <div class="content-fade"></div>
+        </div>
+        <div class="content-actions">
+            <button class="btn btn-sm btn-outline" onclick="showFullContent(${clip.id}, 'markdown')">
+                <i class="fas fa-expand"></i> Show Full Content
+            </button>
+        </div>
+    `;
+}
+
+// 渲染普通文本内容（带截断）
+function renderTextContent(content) {
+    const maxLength = 300; // 普通文本的最大字符数
+    const text = content || 'No content';
+
+    if (text.length <= maxLength) {
+        return `<p>${escapeHtml(text)}</p>`;
+    }
+
+    const truncatedText = text.substring(0, maxLength);
+    const lastSpace = truncatedText.lastIndexOf(' ');
+    const finalText = lastSpace > maxLength * 0.8 ?
+        truncatedText.substring(0, lastSpace) :
+        truncatedText;
+
+    return `
+        <div class="text-content truncated">
+            <p>${escapeHtml(finalText)}...</p>
+        </div>
+        <div class="content-actions">
+            <button class="btn btn-sm btn-outline" onclick="showFullContent(null, 'text', \`${escapeHtml(text).replace(/`/g, '\\`')}\`)">
+                <i class="fas fa-expand"></i> Show Full Content
+            </button>
+        </div>
+    `;
+}
+
+// 显示完整内容的模态框
+function showFullContent(clipId, type, textContent = null) {
+    let content = '';
+    let title = 'Full Content';
+
+    if (type === 'markdown' && clipId) {
+        const clip = clips.find(c => c.id === clipId);
+        if (clip) {
+            content = `<div class="markdown-content fullscreen-content">${renderMarkdown(clip.content)}</div>`;
+            title = clip.title || 'Markdown Content';
+        }
+    } else if (type === 'text' && textContent) {
+        content = `<div class="text-content fullscreen-content"><p>${escapeHtml(textContent)}</p></div>`;
+        title = 'Text Content';
+    }
+
+    // 创建全屏内容模态框
+    const modal = document.createElement('div');
+    modal.className = 'modal fullscreen-content-modal';
+    modal.innerHTML = `
+        <div class="modal-content fullscreen-modal-content">
+            <div class="modal-header">
+                <h3>${escapeHtml(title)}</h3>
+                <button class="btn-close" onclick="closeFullContentModal()">&times;</button>
+            </div>
+            <div class="modal-body fullscreen-modal-body">
+                ${content}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+
+    // ESC 键关闭
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            closeFullContentModal();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+}
+
+// 关闭全屏内容模态框
+function closeFullContentModal() {
+    const modal = document.querySelector('.fullscreen-content-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function detectMarkdown(content) {
+    if (!content) return false;
+
+    // Simple markdown detection patterns
+    const markdownPatterns = [
+        /^#{1,6}\s+/m,           // Headers
+        /\*\*.*?\*\*/,           // Bold
+        /\*.*?\*/,               // Italic
+        /`.*?`/,                 // Inline code
+        /```[\s\S]*?```/,        // Code blocks
+        /^\s*[-*+]\s+/m,         // Unordered lists
+        /^\s*\d+\.\s+/m,         // Ordered lists
+        /\[.*?\]\(.*?\)/,        // Links
+        /^\s*>\s+/m,             // Blockquotes
+        /\|.*?\|/,               // Tables
+    ];
+
+    return markdownPatterns.some(pattern => pattern.test(content));
+}
+
+function autoDetectMarkdown() {
+    const markdownCheckbox = document.getElementById('isMarkdown');
+    const clipType = document.getElementById('clipType').value;
+
+    // 只在 text 类型且 Markdown 选项可见时才自动检测
+    if (!markdownCheckbox || markdownCheckbox.checked) return;
+    if (clipType !== 'text') return;
+    if (markdownCheckbox.closest('.checkbox-label').style.display === 'none') return;
+
+    let content = '';
+    if (codeMirrorEditor) {
+        content = codeMirrorEditor.getValue();
+    } else {
+        const textarea = document.getElementById('clipContent');
+        content = textarea ? textarea.value : '';
+    }
+
+    if (detectMarkdown(content)) {
+        markdownCheckbox.checked = true;
+        toggleMarkdownMode();
+        showToast('Markdown syntax detected - enabled Markdown rendering', 'info');
+    }
+}
+
+// CodeMirror Editor
+let codeMirrorEditor = null;
+
+// Enhanced Markdown editor functionality
+function setupMarkdownEditor() {
+    const contentTextarea = document.getElementById('clipContent');
+    const markdownCheckbox = document.getElementById('isMarkdown');
+    const previewToggle = document.getElementById('previewToggle');
+    const fullscreenToggle = document.getElementById('fullscreenToggle');
+    const editorTheme = document.getElementById('editorTheme');
+    const editorControls = document.getElementById('editorControls');
+    const editorStatus = document.getElementById('editorStatus');
+
+    if (!contentTextarea || !markdownCheckbox) return;
+
+    // Initialize CodeMirror
+    initializeCodeMirror(contentTextarea);
+
+    // Toggle markdown mode
+    markdownCheckbox.addEventListener('change', toggleMarkdownMode);
+
+    // Preview toggle
+    if (previewToggle) {
+        previewToggle.addEventListener('click', togglePreview);
+    }
+
+    // Fullscreen toggle
+    if (fullscreenToggle) {
+        fullscreenToggle.addEventListener('click', toggleFullscreen);
+    }
+
+    // Theme selector
+    if (editorTheme) {
+        editorTheme.addEventListener('change', changeEditorTheme);
+    }
+
+    // ESC key to exit fullscreen
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isFullscreen) {
+            toggleFullscreen();
+        }
+    });
+}
+
+function initializeCodeMirror(textarea) {
+    if (typeof CodeMirror === 'undefined') {
+        console.warn('CodeMirror not loaded, falling back to textarea');
+        return;
+    }
+
+    codeMirrorEditor = CodeMirror.fromTextArea(textarea, {
+        mode: 'text/plain',
+        theme: 'default',
+        lineNumbers: true,
+        lineWrapping: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        styleActiveLine: true,
+        foldGutter: false, // 暂时禁用折叠功能
+        gutters: ["CodeMirror-linenumbers"], // 只保留行号
+        viewportMargin: Infinity, // 改善大文档性能
+        extraKeys: {
+            "Ctrl-Space": "autocomplete",
+            "Ctrl-/": "toggleComment",
+            "Ctrl-F": "findPersistent",
+            "F11": function(cm) {
+                toggleFullscreen();
+            },
+            "Esc": function(cm) {
+                if (isFullscreen) {
+                    toggleFullscreen();
+                }
+            },
+            "Tab": function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    cm.replaceSelection("    ");
+                }
+            },
+            "Ctrl-Enter": function(cm) {
+                // 快速保存
+                if (typeof saveClip === 'function') {
+                    saveClip();
+                }
+            }
+        },
+        placeholder: "Paste or type your content here..."
+    });
+
+    // Update status bar
+    codeMirrorEditor.on('cursorActivity', updateEditorStatus);
+    codeMirrorEditor.on('change', function() {
+        updateEditorStatus();
+        // Auto-detect markdown
+        setTimeout(autoDetectMarkdown, 500);
+    });
+
+    updateEditorStatus();
+
+    // 强制刷新布局以确保行号正确显示
+    setTimeout(() => {
+        if (codeMirrorEditor) {
+            codeMirrorEditor.refresh();
+            // 强制重新计算布局
+            const gutters = codeMirrorEditor.getWrapperElement().querySelector('.CodeMirror-gutters');
+            if (gutters) {
+                gutters.style.left = '0px';
+                gutters.style.position = 'absolute';
+                gutters.style.height = '100%';
+                gutters.style.maxHeight = 'none';
+                gutters.style.overflow = 'visible';
+            }
+        }
+    }, 100);
+}
+
+let isFullscreen = false;
+
+function toggleMarkdownMode() {
+    const markdownCheckbox = document.getElementById('isMarkdown');
+    const editorControls = document.getElementById('editorControls');
+    const editorStatus = document.getElementById('editorStatus');
+    const editorContainer = document.querySelector('.editor-container');
+
+    if (markdownCheckbox.checked) {
+        editorControls.style.display = 'flex';
+        editorStatus.style.display = 'flex';
+        editorContainer.classList.add('markdown-mode');
+
+        // Switch to markdown mode
+        if (codeMirrorEditor) {
+            codeMirrorEditor.setOption('mode', 'gfm');
+            codeMirrorEditor.setOption('extraKeys', {
+                ...codeMirrorEditor.getOption('extraKeys'),
+                "Enter": "newlineAndIndentContinueMarkdownList"
+            });
+            // 刷新编辑器以应用新的高度
+            setTimeout(() => codeMirrorEditor.refresh(), 100);
+        }
+    } else {
+        editorControls.style.display = 'none';
+        editorStatus.style.display = 'none';
+        editorContainer.classList.remove('markdown-mode');
+
+        // Switch back to plain text
+        if (codeMirrorEditor) {
+            codeMirrorEditor.setOption('mode', 'text/plain');
+            setTimeout(() => codeMirrorEditor.refresh(), 100);
+        }
+
+        // Close any open preview modal
+        closeEditorPreview();
+    }
+}
+
+function togglePreview() {
+    // 获取当前编辑器内容
+    let content = '';
+    if (codeMirrorEditor) {
+        content = codeMirrorEditor.getValue();
+    } else {
+        const textarea = document.getElementById('clipContent');
+        content = textarea ? textarea.value : '';
+    }
+
+    if (!content.trim()) {
+        showToast('No content to preview', 'warning');
+        return;
+    }
+
+    // 使用全屏模态框显示预览
+    showEditorPreview(content);
+}
+
+// 显示编辑器预览的全屏模态框
+function showEditorPreview(content) {
+    const title = 'Markdown Preview';
+    const renderedContent = `<div class="markdown-content fullscreen-content">${renderMarkdown(content)}</div>`;
+
+    // 创建全屏预览模态框
+    const modal = document.createElement('div');
+    modal.className = 'modal fullscreen-content-modal editor-preview-modal';
+    modal.innerHTML = `
+        <div class="modal-content fullscreen-modal-content">
+            <div class="modal-header">
+                <h3>${escapeHtml(title)}</h3>
+                <div class="preview-actions">
+                    <button class="btn btn-sm btn-outline" onclick="refreshEditorPreview()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button class="btn-close" onclick="closeEditorPreview()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body fullscreen-modal-body">
+                <div id="editorPreviewContent">
+                    ${renderedContent}
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+
+    // ESC 键关闭
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            closeEditorPreview();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+}
+
+// 刷新编辑器预览内容
+function refreshEditorPreview() {
+    let content = '';
+    if (codeMirrorEditor) {
+        content = codeMirrorEditor.getValue();
+    } else {
+        const textarea = document.getElementById('clipContent');
+        content = textarea ? textarea.value : '';
+    }
+
+    const previewContent = document.getElementById('editorPreviewContent');
+    if (previewContent) {
+        if (content.trim()) {
+            previewContent.innerHTML = `<div class="markdown-content fullscreen-content">${renderMarkdown(content)}</div>`;
+        } else {
+            previewContent.innerHTML = '<p style="color: var(--text-secondary); font-style: italic; text-align: center; margin-top: 2rem;">No content to preview...</p>';
+        }
+    }
+}
+
+// 关闭编辑器预览模态框
+function closeEditorPreview() {
+    const modal = document.querySelector('.editor-preview-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function toggleFullscreen() {
+    const editorContainer = document.querySelector('.editor-container');
+    const fullscreenToggle = document.getElementById('fullscreenToggle');
+
+    isFullscreen = !isFullscreen;
+
+    if (isFullscreen) {
+        editorContainer.classList.add('fullscreen');
+        fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+        fullscreenToggle.title = 'Exit Fullscreen (ESC)';
+
+        // 创建全屏工具栏
+        createFullscreenToolbar();
+
+        // 刷新编辑器
+        if (codeMirrorEditor) {
+            setTimeout(() => {
+                codeMirrorEditor.refresh();
+                codeMirrorEditor.focus();
+            }, 100);
+        }
+    } else {
+        editorContainer.classList.remove('fullscreen');
+        fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenToggle.title = 'Fullscreen (F11)';
+
+        // 移除全屏工具栏
+        removeFullscreenToolbar();
+
+        // 刷新编辑器
+        if (codeMirrorEditor) {
+            setTimeout(() => codeMirrorEditor.refresh(), 100);
+        }
+    }
+}
+
+function createFullscreenToolbar() {
+    const editorContainer = document.querySelector('.editor-container');
+    const existingToolbar = editorContainer.querySelector('.fullscreen-toolbar');
+
+    if (existingToolbar) {
+        existingToolbar.remove();
+    }
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'fullscreen-toolbar';
+
+    toolbar.innerHTML = `
+        <button type="button" id="fullscreenPreviewToggle" class="btn btn-sm btn-outline">
+            <i class="fas fa-eye"></i> Preview
+        </button>
+        <select id="fullscreenEditorTheme" class="form-select-sm">
+            <option value="default">Light</option>
+            <option value="material">Dark</option>
+        </select>
+        <button type="button" onclick="toggleFullscreen()" class="btn btn-sm btn-outline">
+            <i class="fas fa-times"></i> Exit
+        </button>
+    `;
+
+    editorContainer.appendChild(toolbar);
+
+    // 绑定事件
+    const fullscreenPreviewToggle = toolbar.querySelector('#fullscreenPreviewToggle');
+    const fullscreenEditorTheme = toolbar.querySelector('#fullscreenEditorTheme');
+
+    if (fullscreenPreviewToggle) {
+        fullscreenPreviewToggle.addEventListener('click', togglePreview);
+    }
+
+    if (fullscreenEditorTheme) {
+        fullscreenEditorTheme.value = document.getElementById('editorTheme').value;
+        fullscreenEditorTheme.addEventListener('change', function() {
+            document.getElementById('editorTheme').value = this.value;
+            changeEditorTheme();
+        });
+    }
+}
+
+function removeFullscreenToolbar() {
+    const toolbar = document.querySelector('.fullscreen-toolbar');
+    if (toolbar) {
+        toolbar.remove();
+    }
+}
+
+function changeEditorTheme() {
+    const editorTheme = document.getElementById('editorTheme');
+    const theme = editorTheme.value;
+
+    if (codeMirrorEditor) {
+        codeMirrorEditor.setOption('theme', theme);
+    }
+}
+
+function updateEditorStatus() {
+    const editorInfo = document.getElementById('editorInfo');
+    const editorPosition = document.getElementById('editorPosition');
+
+    if (!codeMirrorEditor || !editorInfo || !editorPosition) return;
+
+    const cursor = codeMirrorEditor.getCursor();
+    const selection = codeMirrorEditor.getSelection();
+    const lineCount = codeMirrorEditor.lineCount();
+    const content = codeMirrorEditor.getValue();
+
+    // Update position info
+    editorPosition.textContent = `Line ${cursor.line + 1}, Col ${cursor.ch + 1}`;
+
+    // Update general info
+    let info = `${lineCount} lines, ${content.length} chars`;
+    if (selection) {
+        info += `, ${selection.length} selected`;
+    }
+    editorInfo.textContent = info;
+}
+
+function setEditorMode(mode) {
+    const contentEditor = document.getElementById('contentEditor');
+    const markdownPreview = document.getElementById('markdownPreview');
+    const editorContainer = document.querySelector('.content-editor-container');
+    const editBtn = document.getElementById('editBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const splitBtn = document.getElementById('splitBtn');
+
+    currentEditorMode = mode;
+
+    // Reset button states
+    [editBtn, previewBtn, splitBtn].forEach(btn => {
+        if (btn) btn.classList.remove('active');
+    });
+
+    // Reset container classes
+    editorContainer.classList.remove('split-view');
+
+    switch (mode) {
+        case 'edit':
+            contentEditor.style.display = 'block';
+            markdownPreview.style.display = 'none';
+            if (editBtn) editBtn.classList.add('active');
+            break;
+
+        case 'preview':
+            updatePreview();
+            contentEditor.style.display = 'none';
+            markdownPreview.style.display = 'block';
+            if (previewBtn) previewBtn.classList.add('active');
+            break;
+
+        case 'split':
+            updatePreview();
+            contentEditor.style.display = 'block';
+            markdownPreview.style.display = 'block';
+            editorContainer.classList.add('split-view');
+            if (splitBtn) splitBtn.classList.add('active');
+            break;
+    }
+}
+
+function updatePreview() {
+    const previewContent = document.querySelector('#markdownPreview .preview-content');
+
+    if (!previewContent) return;
+
+    let content = '';
+    if (codeMirrorEditor) {
+        content = codeMirrorEditor.getValue();
+    } else {
+        const textarea = document.getElementById('clipContent');
+        content = textarea ? textarea.value : '';
+    }
+
+    if (content.trim()) {
+        previewContent.innerHTML = renderMarkdown(content);
+    } else {
+        previewContent.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">Nothing to preview...</p>';
+    }
+}
+
+function handleMarkdownShortcuts(e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+
+    const textarea = e.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    let replacement = null;
+
+    switch (e.key) {
+        case 'b': // Bold
+            e.preventDefault();
+            replacement = `**${selectedText || 'bold text'}**`;
+            break;
+        case 'i': // Italic
+            e.preventDefault();
+            replacement = `*${selectedText || 'italic text'}*`;
+            break;
+        case 'k': // Link
+            e.preventDefault();
+            const url = prompt('Enter URL:');
+            if (url) {
+                replacement = `[${selectedText || 'link text'}](${url})`;
+            }
+            break;
+        case '`': // Code
+            e.preventDefault();
+            replacement = `\`${selectedText || 'code'}\``;
+            break;
+    }
+
+    if (replacement) {
+        insertTextAtCursor(textarea, replacement, start, end);
+    }
+}
+
+function insertTextAtCursor(textarea, text, start, end) {
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+
+    textarea.value = before + text + after;
+
+    // Set cursor position
+    const newCursorPos = start + text.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+
+    // Update preview if needed
+    if (currentEditorMode === 'preview' || currentEditorMode === 'split') {
+        updatePreview();
+    }
+}
+
+// Toolbar functions
+function insertMarkdown(before, after, placeholder) {
+    const textarea = document.getElementById('clipContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    let replacement;
+    if (selectedText) {
+        replacement = before + selectedText + after;
+    } else {
+        replacement = before + placeholder + after;
+    }
+
+    insertTextAtCursor(textarea, replacement, start, end);
+
+    // Select the placeholder text if no text was selected
+    if (!selectedText && placeholder) {
+        const placeholderStart = start + before.length;
+        const placeholderEnd = placeholderStart + placeholder.length;
+        textarea.setSelectionRange(placeholderStart, placeholderEnd);
+    }
+}
+
+function insertLink() {
+    const textarea = document.getElementById('clipContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    const url = prompt('Enter URL:', 'https://');
+    if (url) {
+        const linkText = selectedText || 'link text';
+        const replacement = `[${linkText}](${url})`;
+        insertTextAtCursor(textarea, replacement, start, end);
+    }
+}
+
+function insertTable() {
+    const textarea = document.getElementById('clipContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const table = `| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |`;
+
+    insertTextAtCursor(textarea, table, start, end);
+}
+
+function handleTabKey(e) {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const textarea = e.target;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        // Insert tab character
+        insertTextAtCursor(textarea, '    ', start, end);
+    }
+}
+
+function toggleMarkdownHelp() {
+    const helpText = document.querySelector('.markdown-help small');
+    const isExpanded = helpText.innerHTML.includes('Show less');
+
+    if (isExpanded) {
+        helpText.innerHTML = `
+            <strong>Markdown Quick Reference:</strong>
+            **bold** *italic* \`code\` [link](url) # Header
+            <a href="#" onclick="toggleMarkdownHelp(); return false;">Show more...</a>
+        `;
+    } else {
+        helpText.innerHTML = `
+            <strong>Markdown Quick Reference:</strong><br>
+            **bold** *italic* \`code\` [link](url)<br>
+            # Header 1 ## Header 2 ### Header 3<br>
+            - List item 1<br>
+            1. Numbered list<br>
+            > Blockquote<br>
+            \`\`\`code block\`\`\`<br>
+            | Table | Header |<br>
+            |-------|--------|<br>
+            | Cell  | Cell   |<br>
+            <strong>Shortcuts:</strong> Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link), Ctrl+\` (code)<br>
+            <a href="#" onclick="toggleMarkdownHelp(); return false;">Show less...</a>
+        `;
+    }
+}
+
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -1288,9 +2303,23 @@ function editClip(clipId) {
 
     // Fill form with clip data
     document.getElementById('clipTitle').value = clip.title || '';
-    document.getElementById('clipContent').value = clip.content || '';
+
+    // Set content in CodeMirror or textarea
+    if (codeMirrorEditor) {
+        codeMirrorEditor.setValue(clip.content || '');
+    } else {
+        document.getElementById('clipContent').value = clip.content || '';
+    }
+
     document.getElementById('clipType').value = clip.clip_type;
     document.getElementById('accessLevel').value = clip.access_level;
+
+    // 只有在支持 Markdown 的类型时才设置 Markdown 状态
+    if (clip.clip_type === 'text' || clip.clip_type === 'markdown') {
+        document.getElementById('isMarkdown').checked = clip.is_markdown || false;
+    } else {
+        document.getElementById('isMarkdown').checked = false;
+    }
 
     // Store clip ID for update
     document.getElementById('clipForm').dataset.editId = clipId;
@@ -1300,8 +2329,15 @@ function editClip(clipId) {
         showExistingFiles(clip.files);
     }
 
+    // 先处理类型变化，再处理 Markdown 模式
     handleClipTypeChange();
     handleAccessLevelChange();
+
+    // 只有在显示 Markdown 选项时才更新 Markdown UI 状态
+    const markdownCheckbox = document.getElementById('isMarkdown');
+    if (markdownCheckbox && markdownCheckbox.closest('.checkbox-label').style.display !== 'none') {
+        toggleMarkdownMode();
+    }
 }
 
 function showExistingFiles(files) {

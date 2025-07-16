@@ -47,6 +47,7 @@ class ClipService:
             content=clip_create.content,
             clip_type=clip_create.clip_type,
             access_level=clip_create.access_level,
+            is_markdown=clip_create.is_markdown,
             password_hash=password_hash,
             share_token=share_token,
             expires_at=clip_create.expires_at,

@@ -1,3 +1,52 @@
+/* CSS Variables */
+:root {
+    /* Colors */
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary-color: #6b7280;
+
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+
+    /* Text Colors */
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+
+    /* Border Colors */
+    --border-color: #e5e7eb;
+    --border-light: #f3f4f6;
+
+    /* Status Colors */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #1f2937;
+        --bg-secondary: #111827;
+        --bg-tertiary: #374151;
+
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --text-muted: #9ca3af;
+
+        --border-color: #374151;
+        --border-light: #4b5563;
+    }
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -8,8 +57,8 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #f8fafc;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
 }
 
 .container {
@@ -20,12 +69,12 @@ body {
 
 /* Navigation */
 .navbar {
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .nav-container {
@@ -48,7 +97,7 @@ body {
     align-items: center;
     font-size: 20px;
     font-weight: bold;
-    color: #3b82f6;
+    color: var(--primary-color);
 }
 
 .logo i {
@@ -177,17 +226,17 @@ body {
 }
 
 .btn-primary {
-    background: #3b82f6;
+    background: var(--primary-color);
     color: white;
 }
 
 .btn-primary:hover {
-    background: #2563eb;
+    background: var(--primary-hover);
 }
 
 .btn-secondary {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 .btn-secondary:hover {
@@ -500,6 +549,63 @@ body {
     background: #f1f5f9;
 }
 
+/* Enhanced close button for fullscreen modal */
+.fullscreen-content-modal .btn-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.fullscreen-content-modal .btn-close:hover {
+    background: #f1f5f9;
+    color: #374151;
+    transform: scale(1.1);
+}
+
+/* Editor preview modal specific styles */
+.editor-preview-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.editor-preview-modal .preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.editor-preview-modal .preview-actions .btn {
+    font-size: 14px;
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editor-preview-modal .preview-actions .btn:hover {
+    background: #e2e8f0;
+    color: #374151;
+    border-color: #cbd5e1;
+}
+
+.editor-preview-modal .preview-actions .btn i {
+    margin-right: 6px;
+}
+
 .modal-body {
     padding: 20px;
 }
@@ -512,6 +618,85 @@ body {
     border-top: 1px solid #e2e8f0;
 }
 
+/* Fullscreen content modal styles */
+.fullscreen-content-modal {
+    z-index: 1100;
+}
+
+.fullscreen-content-modal .modal-content {
+    width: 95vw;
+    height: 90vh;
+    max-width: none;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.fullscreen-content-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+}
+
+.fullscreen-content-modal .modal-header {
+    flex-shrink: 0;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.fullscreen-content-modal .modal-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Fullscreen content styling */
+.fullscreen-content {
+    font-size: 16px;
+    line-height: 1.8;
+    max-width: 900px;
+    margin: 0; /* 移除auto，避免居中 */
+    text-align: left; /* 强制左对齐 */
+}
+
+.fullscreen-content.markdown-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.fullscreen-content.markdown-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.fullscreen-content.markdown-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.fullscreen-content.markdown-content p {
+    margin-bottom: 1.5rem;
+    font-size: 16px;
+}
+
+.fullscreen-content.markdown-content pre {
+    margin: 2rem 0;
+    padding: 2rem;
+    font-size: 14px;
+}
+
+.fullscreen-content.markdown-content blockquote {
+    margin: 2rem 0;
+    padding: 1.5rem 2rem;
+    font-size: 16px;
+}
+
+.fullscreen-content.text-content p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #374151;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 /* Forms */
 .form-group {
     margin-bottom: 20px;
@@ -521,7 +706,7 @@ body {
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-primary);
 }
 
 .form-group input,
@@ -529,9 +714,11 @@ body {
 .form-group textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 14px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     transition: border-color 0.2s;
 }
 
@@ -539,7 +726,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -764,7 +951,7 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 1100;
+    z-index: 11000;
 }
 
 .toast {
@@ -1006,4 +1193,644 @@ body {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
     border-radius: 0.375rem;
+}
+
+/* Enhanced Editor Styles */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.content-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.editor-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-select-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Editor Container */
+.editor-container {
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--bg-primary);
+}
+
+/* 基础CodeMirror样式 - 保持简单 */
+
+/* CodeMirror基础样式 */
+.editor-container .CodeMirror {
+    height: 500px;
+    min-height: 400px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    border: none;
+    border-radius: 0;
+    transition: height 0.3s ease;
+    text-align: left !important; /* 强制左对齐 */
+    direction: ltr !important; /* 强制从左到右 */
+}
+
+/* 行号区域样式 - 强制修复位置和高度 */
+.editor-container .CodeMirror-gutters {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    position: absolute !important;
+    left: 0 !important; /* 强制在最左侧 */
+    top: 0 !important;
+    bottom: 0 !important;
+    z-index: 3 !important;
+    width: auto !important;
+    min-width: 50px !important;
+    height: 100% !important;
+    max-height: none !important; /* 移除高度限制 */
+    overflow: visible !important; /* 确保内容可见 */
+}
+
+.editor-container .CodeMirror-linenumber {
+    color: var(--text-secondary);
+    padding: 0 8px;
+    font-size: 13px;
+    text-align: right !important; /* 行号右对齐 */
+    white-space: nowrap !important;
+    display: block !important;
+}
+
+/* 内容区域样式 - 确保正确对齐 */
+.editor-container .CodeMirror-lines {
+    padding: 1rem !important;
+    padding-left: 0 !important;
+    text-align: left !important;
+    margin-left: 0 !important;
+}
+
+.editor-container .CodeMirror-line {
+    padding: 0.1rem 0;
+    text-align: left !important;
+}
+
+/* 确保代码内容左对齐 */
+.editor-container .CodeMirror-code {
+    text-align: left !important;
+}
+
+.editor-container .CodeMirror pre {
+    text-align: left !important;
+}
+
+/* 当启用 Markdown 时，编辑器更大 */
+.editor-container.markdown-mode .CodeMirror {
+    height: 600px;
+    min-height: 500px;
+}
+
+.editor-container .CodeMirror-focused {
+    outline: none;
+}
+
+/* 滚动区域样式 */
+.editor-container .CodeMirror-scroll {
+    text-align: left !important;
+    direction: ltr !important;
+}
+
+.editor-container .CodeMirror-sizer {
+    text-align: left !important;
+    direction: ltr !important;
+}
+
+/* 其他CodeMirror元素样式 */
+.editor-container .CodeMirror-scrollbar-filler,
+.editor-container .CodeMirror-gutter-filler {
+    background-color: transparent;
+}
+
+.editor-container .CodeMirror-cursor {
+    border-left: 2px solid var(--primary-color);
+}
+
+.editor-container .CodeMirror-selected {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.editor-container .CodeMirror-line::selection,
+.editor-container .CodeMirror-line > span::selection,
+.editor-container .CodeMirror-line > span > span::selection {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* Split view for editor and preview */
+.editor-container.split-view {
+    display: flex;
+    height: 700px; /* 增大分屏高度 */
+    min-height: 600px;
+}
+
+.editor-container.split-view .CodeMirror {
+    width: 50%;
+    height: 100%;
+    border-right: 1px solid var(--border-color);
+}
+
+.editor-container.split-view .preview-panel {
+    width: 50%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 2rem; /* 增加预览区域内边距 */
+    background: var(--bg-primary);
+    font-size: 15px; /* 增大预览字体 */
+    line-height: 1.7;
+}
+
+/* Preview Panel */
+.preview-panel {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 2rem; /* 增加内边距 */
+    margin-top: 1rem;
+    min-height: 500px; /* 设置最小高度 */
+    max-height: 600px; /* 增大最大高度 */
+    overflow-y: auto;
+    font-size: 15px; /* 增大字体 */
+    line-height: 1.7;
+}
+
+.preview-content {
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+/* Editor Status Bar */
+.editor-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Checkbox styling improvements */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 0.5rem;
+    accent-color: var(--primary-color);
+}
+
+.checkmark {
+    margin-left: 0.25rem;
+}
+
+/* 全屏编辑器样式 */
+.editor-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: var(--bg-primary);
+    border: none;
+    border-radius: 0;
+    margin: 0;
+}
+
+.editor-container.fullscreen .CodeMirror {
+    height: 100vh !important;
+    min-height: 100vh !important;
+}
+
+.editor-container.fullscreen.split-view {
+    height: 100vh !important;
+    display: flex !important;
+}
+
+.editor-container.fullscreen.split-view .CodeMirror {
+    width: 50% !important;
+    height: 100vh !important;
+    border-right: 1px solid var(--border-color);
+    padding-top: 40px;
+}
+
+.editor-container.fullscreen.split-view .preview-panel {
+    width: 50% !important;
+    height: 100vh !important;
+    padding: 40px 3rem 3rem 3rem; /* 顶部为工具栏留空间 */
+    font-size: 16px;
+    background: var(--bg-primary) !important;
+    opacity: 1 !important;
+    z-index: 1;
+    border-left: 1px solid var(--border-color);
+    overflow-y: auto;
+    display: block !important;
+}
+
+/* 全屏时的工具栏 */
+.editor-container.fullscreen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 10000;
+}
+
+.editor-container.fullscreen .fullscreen-toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    z-index: 10001;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.editor-container.fullscreen .CodeMirror {
+    padding-top: 40px;
+}
+
+/* 全屏模式下的预览内容样式 */
+.editor-container.fullscreen .preview-content {
+    max-width: none; /* 全屏时不限制宽度 */
+    margin: 0;
+    padding: 0;
+}
+
+/* 改善 Markdown 内容在预览中的显示 */
+.preview-content {
+    max-width: 800px; /* 限制最大宽度，提高可读性 */
+    margin: 0 auto;
+}
+
+/* 其他必要的样式重置 */
+.editor-container .CodeMirror-measure {
+    position: absolute !important;
+    width: 100% !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+}
+
+.editor-container .CodeMirror-cursors {
+    visibility: visible !important;
+}
+
+/* Markdown content styling */
+.markdown-content {
+    line-height: 1.7;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    max-width: none;
+}
+
+/* Truncated content styles for clips grid */
+.markdown-content.truncated {
+    position: relative;
+    max-height: 150px;
+    overflow: hidden;
+}
+
+.markdown-content.truncated .content-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, white);
+    pointer-events: none;
+}
+
+.text-content.truncated {
+    position: relative;
+    max-height: 120px;
+    overflow: hidden;
+}
+
+/* Content actions for show more button */
+.content-actions {
+    margin-top: 12px;
+    text-align: center;
+}
+
+.content-actions .btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.content-actions .btn:hover {
+    background: #e2e8f0;
+    color: #374151;
+    border-color: #cbd5e1;
+}
+
+.content-actions .btn i {
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.markdown-content h1:first-child,
+.markdown-content h2:first-child,
+.markdown-content h3:first-child {
+    margin-top: 0;
+}
+
+.markdown-content h1 {
+    font-size: 2rem;
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.markdown-content h2 {
+    font-size: 1.6rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.markdown-content h3 {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.markdown-content h4 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.markdown-content h5,
+.markdown-content h6 {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.markdown-content p {
+    margin-bottom: 1.25rem;
+    text-align: justify;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 1.25rem;
+    padding-left: 2rem;
+}
+
+.markdown-content li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.markdown-content li p {
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid var(--primary-color);
+    background: linear-gradient(90deg, var(--bg-secondary) 0%, transparent 100%);
+    font-style: italic;
+    position: relative;
+}
+
+.markdown-content blockquote::before {
+    content: '"';
+    font-size: 3rem;
+    color: var(--primary-color);
+    position: absolute;
+    top: -0.5rem;
+    left: 0.5rem;
+    opacity: 0.3;
+}
+
+.markdown-content code {
+    background: var(--bg-secondary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.3rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+}
+
+.markdown-content pre {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.markdown-content pre code {
+    background: none;
+    padding: 0;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+/* 代码块复制按钮样式 */
+.markdown-content pre .copy-code-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-content pre:hover .copy-code-btn {
+    opacity: 1;
+}
+
+.markdown-content pre .copy-code-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.markdown-content pre .copy-code-btn.copied {
+    background: var(--success-color);
+    color: white;
+    border-color: var(--success-color);
+}
+
+.markdown-content pre .copy-code-btn i {
+    font-size: 0.75rem;
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+.markdown-content th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+.markdown-content tr:nth-child(even) {
+    background: var(--bg-secondary);
+}
+
+.markdown-content tr:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.markdown-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.markdown-content a:hover {
+    border-bottom-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.25rem;
+}
+
+.markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin: 1rem 0;
+}
+
+.markdown-content hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 2rem 0;
+}
+
+/* Task lists */
+.markdown-content input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.markdown-content .task-list-item {
+    list-style: none;
+    margin-left: -2rem;
+    padding-left: 2rem;
+}
+
+/* Emphasis and strong */
+.markdown-content strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.markdown-content em {
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Syntax highlighting for code blocks */
+.markdown-content .hljs {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary);
+}
+
+/* Checkbox styling */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.checkmark {
+    margin-left: 0.25rem;
 }

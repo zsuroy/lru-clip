@@ -5,7 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLIP.LRU - Paste Before You Think</title>
     <link rel="stylesheet" href="static/css/styles.css">
+<!--    <link href="static/css/font-awesome.all.min.css" rel="stylesheet">-->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CodeMirror 5 -->
+    <link rel="stylesheet" href="static/lib/codemirror5/codemirror.min.css">
+    <link rel="stylesheet" href="static/lib/codemirror5/addon/dialog.min.css">
+    <link rel="stylesheet" href="static/lib/codemirror5/addon/foldgutter.min.css">
+    <link rel="stylesheet" href="static/lib/codemirror5/theme/github.min.css">
+    <link rel="stylesheet" href="static/lib/codemirror5/theme/material.min.css">
+
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog.min.css">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/foldgutter.min.css">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/github.min.css">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css">-->
+
+    <!-- Markdown support -->
+    <script src="static/lib/highlight/marked.min.js"></script>
+    <link rel="stylesheet" href="static/lib/highlight/github.min.css">
+    <script src="static/lib/highlight/highlight.min.js"></script>
+
+<!--    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>-->
 </head>
 <body>
     <!-- Navigation -->
@@ -177,8 +200,40 @@
                     </div>
                     
                     <div class="form-group" id="contentGroup">
-                        <label for="clipContent">Content</label>
-                        <textarea id="clipContent" rows="8" placeholder="Paste or type your content here..."></textarea>
+                        <div class="content-header">
+                            <label for="clipContent">Content</label>
+                            <div class="content-controls">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="isMarkdown">
+                                    <span class="checkmark"></span>
+                                    MD
+                                </label>
+                                <div class="editor-controls" id="editorControls" style="display: none;">
+                                    <button type="button" id="previewToggle" class="btn btn-sm btn-outline">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <select id="editorTheme" class="form-select-sm">
+                                        <option value="default">Light</option>
+                                        <option value="material">Dark</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="editor-container">
+                            <!-- CodeMirror will replace this textarea -->
+                            <textarea id="clipContent" placeholder="Paste or type your content here..."></textarea>
+
+                            <!-- Preview panel -->
+                            <div id="markdownPreview" class="preview-panel" style="display: none;">
+                                <div class="preview-content"></div>
+                            </div>
+                        </div>
+
+                        <div class="editor-status" id="editorStatus" style="display: none;">
+                            <span id="editorInfo">Ready</span>
+                            <span id="editorPosition"></span>
+                        </div>
                     </div>
                     
                     <div class="form-group" id="fileGroup" style="display: none;">
@@ -280,6 +335,41 @@
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- CodeMirror 5 Scripts -->
+    <script src="static/lib/codemirror5/codemirror.min.js"></script>
+    <script src="static/lib/codemirror5/mode/markdown.min.js"></script>
+    <script src="static/lib/codemirror5/mode/gfm.min.js"></script>
+    <script src="static/lib/codemirror5/mode/javascript.min.js"></script>
+    <script src="static/lib/codemirror5/mode/python.min.js"></script>
+    <script src="static/lib/codemirror5/mode/xml.min.js"></script>
+    <script src="static/lib/codemirror5/mode/css.min.js"></script>
+    <script src="static/lib/codemirror5/mode/htmlmixed.min.js"></script>
+    <script src="static/lib/codemirror5/addon/continuelist.min.js"></script>
+    <script src="static/lib/codemirror5/addon/active-line.min.js"></script>
+    <script src="static/lib/codemirror5/addon/searchcursor.min.js"></script>
+    <script src="static/lib/codemirror5/addon/search.min.js"></script>
+    <script src="static/lib/codemirror5/addon/dialog.min.js"></script>
+    <script src="static/lib/codemirror5/addon/foldcode.min.js"></script>
+    <script src="static/lib/codemirror5/addon/foldgutter.min.js"></script>
+    <script src="static/lib/codemirror5/addon/markdown-fold.min.js"></script>
+
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gfm.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/continuelist.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/active-line.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/searchcursor.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/foldcode.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/foldgutter.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/markdown-fold.min.js"></script>-->
 
     <script src="static/js/script.js"></script>
 </body>

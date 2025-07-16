@@ -14,6 +14,7 @@ class ClipBase(BaseModel):
     content: Optional[str] = Field(None, description="Clip content")
     clip_type: ClipType = Field(ClipType.TEXT, description="Type of clip")
     access_level: AccessLevel = Field(AccessLevel.PRIVATE, description="Access level")
+    is_markdown: bool = Field(False, description="Whether content should be rendered as markdown")
 
 
 class ClipCreate(ClipBase):
