@@ -2,13 +2,12 @@
 Application configuration settings
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings"""
-    database_url: str = "mysql://root:password@localhost:3306/cliplru"
+    database_url: str = "sqlite:///./clips.db"
     secret_key: str = "your-secret-key-change-in-production"
     jwt_expire_minutes: int = 1440  # 24 hours
     storage_path: str = "./uploads"
@@ -28,7 +27,7 @@ class Settings(BaseSettings):
     enable_debug_pages: bool = False
     enable_test_pages: bool = False
 
-    model_config = ConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()
