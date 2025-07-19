@@ -82,19 +82,13 @@ class FrontendConfig:
             """Serve the shared clip page"""
             return self._serve_html_file("shared.html", "Shared clip page")
         
-        # Debug page (only if enabled)
-        if settings.enable_debug_pages:
+        # Debug page (only for debug)
+        if settings.debug:
             @self.app.get("/debug", include_in_schema=False)
             async def serve_debug_page():
                 """Serve the debug page"""
-                return self._serve_html_file("debug.html", "Debug page")
+                return self._serve_html_file("tests/debug.html", "Debug page")
 
-            logger.info("Debug page enabled at /debug")
-        else:
-            logger.info("Debug page disabled (set ENABLE_DEBUG_PAGES=true to enable)")
-
-        # Test pages (only if enabled)
-        if settings.enable_test_pages:
             @self.app.get("/tests/{test_name}", include_in_schema=False)
             async def serve_test_page(test_name: str):
                 """Serve test pages"""
@@ -105,10 +99,10 @@ class FrontendConfig:
                 test_file = f"tests/{test_name}.html"
                 return self._serve_html_file(test_file, f"Test page: {test_name}")
 
-            logger.info("Test pages enabled at /tests/*")
+            logger.info("Debug page enabled at /tests")
         else:
-            logger.info("Test pages disabled (set ENABLE_TEST_PAGES=true to enable)")
-        
+            logger.info("Debug page disabled (set DEBUG=true to enable)")
+
         logger.info("Frontend page routes configured")
     
     def _serve_html_file(self, file_path: str, description: str) -> FileResponse:

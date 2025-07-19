@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     max_file_size: int = 100 * 1024 * 1024  # 100MB
     lru_max_items_per_user: int = 1000
     lru_cleanup_interval: int = 3600  # 1 hour in seconds
-    debug: bool = False
 
     # Anonymous user settings
     allow_anonymous: bool = True
@@ -24,8 +23,7 @@ class Settings(BaseSettings):
     anonymous_clip_expire_hours: int = 24  # Anonymous clips expire after 24 hours
 
     # Development and testing settings
-    enable_debug_pages: bool = False
-    enable_test_pages: bool = False
+    debug: bool = False
 
     model_config = SettingsConfigDict(env_file=".env")
 
