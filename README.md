@@ -85,7 +85,7 @@ Configure the application using environment variables or a `.env` file:
 
 ```env
 # Database Configuration
-DATABASE_URL=sqlite:///./clips.db
+DATABASE_URL=sqlite:///./cliplru.db
 
 # Security Settings
 SECRET_KEY=your-super-secret-key-change-this-in-production
@@ -105,20 +105,17 @@ ANONYMOUS_STORAGE_QUOTA=104857600  # 100MB
 ANONYMOUS_CLIP_EXPIRE_HOURS=24
 
 # Development & Testing (set to true to enable)
-ENABLE_DEBUG_PAGES=false
-ENABLE_TEST_PAGES=false
+DEBUG=false
 ```
 
 ### Configuration Examples
 
 #### Production Setup
 ```env
-DATABASE_URL=mysql://user:password@localhost/clipslru
+DATABASE_URL=mysql://user:password@localhost/cliplru
 SECRET_KEY=your-production-secret-key
-STORAGE_PATH=/var/lib/clipslru/uploads
+STORAGE_PATH=/var/lib/cliplru/uploads
 ALLOW_ANONYMOUS=false
-ENABLE_DEBUG_PAGES=false
-ENABLE_TEST_PAGES=false
 ```
 
 #### Development Setup
@@ -127,8 +124,7 @@ DATABASE_URL=sqlite:///./dev.db
 SECRET_KEY=dev-secret-key
 STORAGE_PATH=./dev_uploads
 ALLOW_ANONYMOUS=true
-ENABLE_DEBUG_PAGES=true
-ENABLE_TEST_PAGES=true
+DEBUG=true
 ```
 
 ## 🏗️ Architecture
@@ -246,11 +242,9 @@ lru-clip/
 │   ├── tests/                    # Frontend test pages
 │   ├── index.html                # Main application page
 │   ├── shared.html               # Shared clip viewer
-│   └── debug.html                # Debug utilities
 ├── tests/                        # Backend tests (85+ tests)
 ├── scripts/                      # Utility scripts
 ├── requirements.txt              # Python dependencies
-├── pytest.ini                   # Test configuration
 └── README.md                     # This file
 ```
 
@@ -262,9 +256,9 @@ lru-clip/
 pip install -r requirements.txt
 
 # Set production environment
-export DATABASE_URL=mysql://user:pass@localhost/clipslru
+export DATABASE_URL=mysql://user:pass@localhost/cliplru
 export SECRET_KEY=your-production-secret
-export STORAGE_PATH=/var/lib/clipslru/uploads
+export STORAGE_PATH=/var/lib/cliplru/uploads
 
 # Run with Gunicorn
 pip install gunicorn
@@ -272,18 +266,28 @@ gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
 ### Docker Deployment
-```dockerfile
-FROM python:3.13-slim
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+#### Quick Start with Docker
 
-COPY . .
-EXPOSE 8000
+```bash
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Deploy Helper
+./docker/deploy.sh
+
+# Deploy with SQLite (lightweight, good for development)
+./docker/deploy.sh sqlite
+
+# Or deploy with MySQL (production-ready)
+./docker/deploy.sh mysql
+
+# Access the application at http://localhost:8000
 ```
+
+#### Available deployment options:
+- **SQLite deployment**: `docker-compose.yml` - Simple, file-based database
+- **MySQL deployment**: `docker-compose.mysql.yml` - Production-ready with MySQL 8.0
+
+For detailed Docker deployment instructions, see [docker/README.md](docker/README.md).
 
 ## 🤝 Contributing
 

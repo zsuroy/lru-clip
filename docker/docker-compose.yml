@@ -1,0 +1,51 @@
+# CLIP.LRU - Lightweight Docker Compose (SQLite)
+# This is the default lightweight deployment using SQLite database
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: clip-lru-app
+    ports:
+      - "${HOST:-0.0.0.0}:${PORT:-8000}:8000"
+    volumes:
+      # Data persistence for SQLite database
+      - ../data:/app/data
+      # File uploads persistence
+      - ../uploads:/app/uploads
+      # Optional: Custom configuration
+      - ../.env:/app/.env:ro
+    environment:
+      # SQLite configuration (lightweight)
+      - DATABASE_URL=sqlite:///./data/clips.db
+      - STORAGE_PATH=/app/uploads
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - DEBUG=${DEBUG:-false}
+      - ALLOW_ANONYMOUS=${ALLOW_ANONYMOUS:-true}
+      # File size limits
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-104857600}
+      - ANONYMOUS_MAX_FILE_SIZE=${ANONYMOUS_MAX_FILE_SIZE:-10485760}
+      # LRU settings
+      - LRU_MAX_ITEMS_PER_USER=${LRU_MAX_ITEMS_PER_USER:-1000}
+      - LRU_CLEANUP_INTERVAL=${LRU_CLEANUP_INTERVAL:-3600}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/api/frontend/status', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - clip-lru-network
+
+networks:
+  clip-lru-network:
+    driver: bridge
+
+volumes:
+  # Named volumes for better management (optional)
+  clip-data:
+    driver: local
+  clip-uploads:
+    driver: local

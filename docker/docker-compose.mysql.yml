@@ -1,0 +1,84 @@
+# CLIP.LRU - Production Docker Compose (MySQL)
+# This is the production deployment using MySQL database
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: clip-lru-app
+    ports:
+      - "${HOST:-0.0.0.0}:${PORT:-8000}:8000"
+    volumes:
+      # File uploads persistence
+      - ../uploads:/app/uploads
+      # Optional: Custom configuration
+      - ../.env:/app/.env:ro
+    environment:
+      # MySQL configuration
+      - DATABASE_URL=mysql://cliplru:${DB_PASSWORD:-cliplru_password}@mysql:3306/cliplru
+      - STORAGE_PATH=/app/uploads
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - DEBUG=${DEBUG:-false}
+      - ALLOW_ANONYMOUS=${ALLOW_ANONYMOUS:-true}
+      # File size limits
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-104857600}
+      - ANONYMOUS_MAX_FILE_SIZE=${ANONYMOUS_MAX_FILE_SIZE:-10485760}
+      # LRU settings
+      - LRU_MAX_ITEMS_PER_USER=${LRU_MAX_ITEMS_PER_USER:-1000}
+      - LRU_CLEANUP_INTERVAL=${LRU_CLEANUP_INTERVAL:-3600}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:8000/api/frontend/status', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - clip-lru-network
+    # Install MySQL dependencies at runtime
+    command: >
+      sh -c "pip install -r requirements-mysql.txt &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  mysql:
+    image: mysql:8.0
+    container_name: clip-lru-mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=${DB_USER:-cliplru}
+      - MYSQL_DATABASE=${DB_DATABASE:-cliplru}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-cliplru_password}
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - clip-lru-network
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+
+networks:
+  clip-lru-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  clip-uploads:
+    driver: local

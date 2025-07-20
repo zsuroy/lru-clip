@@ -1,0 +1,10 @@
+# Dev-specific dependencies for CLIP.LRU
+# Install these additional dependencies when developing
+
+# Include all base requirements
+-r requirements.txt
+
+# for testing
+pytest~=8.4.1
+pytest-cov
+httpx

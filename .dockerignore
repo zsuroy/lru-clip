@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+*.egg-info/
+build/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.tox/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Project specific - Runtime data
+uploads/
+data/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Development and testing
+dev/
+htmlcov/
+tests/
+.env
+.env*
+.github/
+requirements-dev.txt
+
+# Docker files (avoid recursive copying)
+docker/
+.dockerignore
+
+# Documentation and project files
+README.md
+CHANGELOG.md
+LICENSE

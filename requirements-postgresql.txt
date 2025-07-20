@@ -1,0 +1,8 @@
+# PostgreSQL-specific dependencies for CLIP.LRU
+# Install these additional dependencies when using PostgreSQL database
+
+# Include all base requirements
+-r requirements.txt
+
+# PostgreSQL client library
+psycopg2-binary

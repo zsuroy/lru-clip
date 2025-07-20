@@ -1,0 +1,11 @@
+# MySQL-specific dependencies for CLIP.LRU
+# Install these additional dependencies when using MySQL database
+
+# Include all base requirements
+-r requirements.txt
+
+# MySQL client library
+mysqlclient
+
+# Optional: PyMySQL as alternative MySQL driver
+# pymysql
