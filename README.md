@@ -1,6 +1,6 @@
-# CLIP.LRU - Modern Clipboard & File Sharing
+# CLIP.LRU - Paste Before You Think
 
-![GPL License](https://img.shields.io/badge/license-GPL-blue.svg) ![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg) ![Vanilla JS](https://img.shields.io/badge/Frontend-Vanilla%20JS-yellow.svg)
+![GPL License](https://img.shields.io/badge/license-GPL-blue.svg) ![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.116+-green.svg) ![Vanilla JS](https://img.shields.io/badge/Frontend-Vanilla%20JS-yellow.svg)
 
 A modern, full-featured clipboard and file sharing application built with FastAPI and vanilla JavaScript. Share text, files, and create secure clips with password protection and anonymous access support.
 
@@ -39,7 +39,7 @@ A modern, full-featured clipboard and file sharing application built with FastAP
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.8+** (Python 3.13 recommended)
+- **Python 3.12+** (Python 3.13 recommended)
 - **pip** for dependency management
 
 ### Installation
