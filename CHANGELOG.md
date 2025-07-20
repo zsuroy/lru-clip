@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [V0.1.0] - 2025-07-20
 ### Added
 - 🆕 Initial project structure.
 - 🆕 Basic API endpoints for clips and users.
@@ -14,3 +14,4 @@ All notable changes to this project will be documented in this file.
 - 🆕 Initial frontend setup with HTML, CSS, and JavaScript.
 - 🆕 Basic frontend for testing and debugging.
 - 🆕 Basic markdown preview support.
+- 🆕 Docker deployment support.
