@@ -1237,8 +1237,8 @@ body {
 
 /* CodeMirror基础样式 */
 .editor-container .CodeMirror {
-    height: 500px;
-    min-height: 400px;
+    height: auto;
+    min-height: 250px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
     font-size: 15px;
     line-height: 1.6;
@@ -1276,8 +1276,7 @@ body {
 
 /* 内容区域样式 - 确保正确对齐 */
 .editor-container .CodeMirror-lines {
-    padding: 1rem !important;
-    padding-left: 0 !important;
+    padding: 0 !important;
     text-align: left !important;
     margin-left: 0 !important;
 }
