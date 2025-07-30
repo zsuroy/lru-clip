@@ -41,7 +41,6 @@ logs/
 dev/
 htmlcov/
 tests/
-.env
 .env*
 .github/
 requirements-dev.txt

@@ -36,6 +36,16 @@ class FileService:
                 hash_sha256.update(chunk)
         return hash_sha256.hexdigest()
     
+    def _calculate_file_hash_streaming(self, file_content: bytes) -> str:
+        """Calculate SHA-256 hash from file content"""
+        hash_sha256 = hashlib.sha256()
+        # Process content in chunks for large files
+        chunk_size = 4096
+        for i in range(0, len(file_content), chunk_size):
+            chunk = file_content[i:i + chunk_size]
+            hash_sha256.update(chunk)
+        return hash_sha256.hexdigest()
+    
     def _get_file_info(self, file_path: Path, mime_type: str) -> dict:
         """Get file metadata"""
         info = {
@@ -136,6 +146,110 @@ class FileService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"File upload failed: {str(e)}"
+            )
+    
+    async def stream_upload_file(
+        self,
+        db: Session,
+        file: UploadFile,
+        user: User,
+        clip: Optional[Clip] = None
+    ) -> File:
+        """Upload a file using streaming approach for better progress tracking"""
+        # Determine file size limit based on user type
+        max_size = settings.anonymous_max_file_size if user.is_anonymous else self.max_file_size
+
+        # Validate file size if available
+        if file.size and file.size > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File too large. Maximum size is {max_size} bytes"
+            )
+        
+        # Create temporary file path
+        temp_path = self.storage_path / f"temp_{file.filename}"
+        
+        try:
+            # Stream upload file with progress tracking
+            file_content = bytearray()
+            total_size = 0
+            chunk_size = 8192  # 8KB chunks for streaming
+            
+            # Read file in chunks
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                
+                file_content.extend(chunk)
+                total_size += len(chunk)
+                
+                # Check size limit during upload
+                if total_size > max_size:
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail=f"File too large. Maximum size is {max_size} bytes"
+                    )
+            
+            # Write to temporary file
+            with open(temp_path, "wb") as buffer:
+                buffer.write(file_content)
+            
+            # Calculate file hash from content
+            file_hash = self._calculate_file_hash_streaming(bytes(file_content))
+            
+            # Check if file already exists (deduplication)
+            existing_file = db.query(File).filter(File.file_hash == file_hash).first()
+            if existing_file:
+                # Remove temp file
+                temp_path.unlink()
+                
+                # Create new file record pointing to existing file
+                db_file = File(
+                    filename=existing_file.filename,
+                    original_filename=file.filename,
+                    file_path=existing_file.file_path,
+                    file_size=existing_file.file_size,
+                    mime_type=file.content_type or "application/octet-stream",
+                    file_hash=file_hash,
+                    owner_id=user.id,
+                    clip_id=clip.id if clip else None,
+                    **self._get_file_info(Path(existing_file.file_path), file.content_type or "")
+                )
+            else:
+                # Generate unique filename
+                filename = self._generate_filename(file.filename, file_hash)
+                final_path = self.storage_path / filename
+                
+                # Move temp file to final location
+                temp_path.rename(final_path)
+                
+                # Create file record
+                db_file = File(
+                    filename=filename,
+                    original_filename=file.filename,
+                    file_path=str(final_path),
+                    file_size=total_size,
+                    mime_type=file.content_type or "application/octet-stream",
+                    file_hash=file_hash,
+                    owner_id=user.id,
+                    clip_id=clip.id if clip else None,
+                    **self._get_file_info(final_path, file.content_type or "")
+                )
+            
+            db.add(db_file)
+            db.commit()
+            db.refresh(db_file)
+            
+            return db_file
+            
+        except Exception as e:
+            # Clean up temp file if it exists
+            if temp_path.exists():
+                temp_path.unlink()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Streaming file upload failed: {str(e)}"
             )
     
     def get_file_by_id(self, db: Session, file_id: int, user: User) -> Optional[File]:

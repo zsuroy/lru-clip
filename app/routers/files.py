@@ -44,6 +44,33 @@ def upload_file(
     )
 
 
+@router.post("/stream-upload", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
+async def stream_upload_file(
+    file: UploadFile = FastAPIFile(...),
+    clip_id: Optional[int] = Query(None, description="Associate with clip"),
+    current_user = Depends(get_current_user_or_anonymous),
+    db: Session = Depends(get_db)
+):
+    """Upload a file using streaming approach for better progress tracking"""
+    # Validate clip if provided
+    clip = None
+    if clip_id:
+        clip = clip_service.get_clip_by_id(db, clip_id, current_user)
+        if not clip:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Clip not found"
+            )
+    
+    # Stream upload file
+    db_file = await file_service.stream_upload_file(db, file, current_user, clip)
+    
+    return FileUploadResponse(
+        file=FileResponseSchema.model_validate(db_file),
+        message="File uploaded successfully via streaming"
+    )
+
+
 @router.get("/", response_model=FileListResponse)
 def get_files(
     page: int = Query(1, ge=1, description="Page number"),
