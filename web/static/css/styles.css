@@ -4,6 +4,7 @@
     --primary-color: #3b82f6;
     --primary-hover: #2563eb;
     --secondary-color: #6b7280;
+    --danger-color: #ff0000;
 
     /* Background Colors */
     --bg-primary: #ffffff;
@@ -1832,4 +1833,187 @@ body {
 
 .checkmark {
     margin-left: 0.25rem;
+}
+
+/* Enhanced file upload progress styles */
+.files-progress-container {
+    margin-top: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+}
+
+.file-upload-progress {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    transition: all 0.3s ease;
+}
+
+.file-upload-progress:last-child {
+    border-bottom: none;
+}
+
+.file-upload-progress.completed {
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.1) 0%, var(--bg-primary) 100%);
+    border-left: 4px solid #22c55e;
+}
+
+.file-upload-progress.failed {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-primary) 100%);
+    border-left: 4px solid #ef4444;
+}
+
+.file-upload-progress.cancelled {
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, var(--bg-primary) 100%);
+    border-left: 4px solid #f97316;
+}
+
+.file-progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.file-progress-info .file-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+}
+
+.file-progress-info .file-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.file-upload-progress.completed .progress-fill {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.file-upload-progress.failed .progress-fill {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.file-upload-progress.cancelled .progress-fill {
+    background: linear-gradient(90deg, #f97316, #ea580c);
+}
+
+.progress-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.progress-percent {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.progress-speed {
+    color: #3b82f6;
+}
+
+.progress-eta {
+    color: var(--text-secondary);
+}
+
+.cancel-all-btn {
+    margin: 0.5rem 0;
+    float: right;
+}
+
+.cancel-file-btn {
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+    line-height: 1;
+    min-width: auto;
+}
+
+.cancel-file-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Upload progress container improvements */
+.upload-progress {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.upload-progress .progress-text {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Animation for progress bars */
+@keyframes progressPulse {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.progress-fill:not(.file-upload-progress.completed .progress-fill):not(.file-upload-progress.failed .progress-fill) {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8, #3b82f6);
+    background-size: 200% 200%;
+    animation: progressPulse 2s ease-in-out infinite;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .file-progress-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .file-progress-info .file-name {
+        max-width: 100%;
+    }
+    
+    .progress-details {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .files-progress-container {
+        max-height: 200px;
+    }
 }

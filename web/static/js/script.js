@@ -1072,7 +1072,7 @@ function updateFileDisplay() {
             <div class="files-header">
                 <h4><i class="fas fa-files"></i> Selected Files (${selectedFiles.length})</h4>
                 <div class="files-actions">
-                    <button type="button" class="btn btn-sm btn-primary" onclick="uploadAllFiles()">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="smartUpload()">
                         <i class="fas fa-upload"></i> Upload All
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary" onclick="addMoreFiles()">
@@ -1131,6 +1131,316 @@ function clearSelectedFiles() {
     showToast('All files cleared', 'info');
 }
 
+// Stream upload function with real progress tracking
+async function uploadFileWithProgress(file, index, total) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        
+        // Create progress container for this file
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'file-upload-progress';
+        progressContainer.innerHTML = `
+            <div class="file-progress-info">
+                <div class="file-name">${escapeHtml(file.name)}</div>
+                <div class="file-status">Preparing...</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-details">
+                <span class="progress-percent">0%</span>
+                <span class="progress-speed"></span>
+                <span class="progress-eta"></span>
+            </div>
+        `;
+        
+        // Add to progress display
+        const uploadProgress = document.getElementById('uploadProgress');
+        if (!uploadProgress.querySelector('.files-progress-container')) {
+            const container = document.createElement('div');
+            container.className = 'files-progress-container';
+            uploadProgress.appendChild(container);
+        }
+        uploadProgress.querySelector('.files-progress-container').appendChild(progressContainer);
+        
+        const progressFill = progressContainer.querySelector('.progress-fill');
+        const progressPercent = progressContainer.querySelector('.progress-percent');
+        const progressSpeed = progressContainer.querySelector('.progress-speed');
+        const progressEta = progressContainer.querySelector('.progress-eta');
+        const fileStatus = progressContainer.querySelector('.file-status');
+        
+        let startTime = Date.now();
+        let lastLoaded = 0;
+        let lastTime = startTime;
+        
+        // Upload progress tracking
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                const currentTime = Date.now();
+                const timeElapsed = (currentTime - startTime) / 1000;
+                const timeSinceLastUpdate = (currentTime - lastTime) / 1000;
+                
+                // Update progress bar
+                progressFill.style.width = `${percent}%`;
+                progressPercent.textContent = `${percent}%`;
+                
+                // Calculate speed
+                if (timeSinceLastUpdate > 0.5) { // Update speed every 0.5 seconds
+                    const bytesThisUpdate = event.loaded - lastLoaded;
+                    const speed = bytesThisUpdate / timeSinceLastUpdate;
+                    progressSpeed.textContent = `${formatFileSize(speed)}/s`;
+                    
+                    // Calculate ETA
+                    if (speed > 0) {
+                        const remainingBytes = event.total - event.loaded;
+                        const eta = remainingBytes / speed;
+                        if (eta > 60) {
+                            progressEta.textContent = `ETA: ${Math.ceil(eta / 60)}m`;
+                        } else {
+                            progressEta.textContent = `ETA: ${Math.ceil(eta)}s`;
+                        }
+                    }
+                    
+                    lastLoaded = event.loaded;
+                    lastTime = currentTime;
+                }
+                
+                fileStatus.textContent = `Uploading... ${formatFileSize(event.loaded)} / ${formatFileSize(event.total)}`;
+            }
+        });
+        
+        // Handle upload completion
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const response = JSON.parse(xhr.responseText);
+                progressFill.style.width = '100%';
+                progressPercent.textContent = '100%';
+                fileStatus.textContent = 'Upload complete!';
+                fileStatus.style.color = 'green';
+                progressContainer.classList.add('completed');
+                
+                // Hide cancel button
+                const cancelBtn = progressContainer.querySelector('.cancel-file-btn');
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none';
+                }
+                
+                resolve(response.file);
+            } else {
+                let errorMessage = 'Upload failed!';
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    errorMessage = errorResponse.detail || errorMessage;
+                } catch (e) {
+                    errorMessage = `HTTP ${xhr.status}: ${xhr.statusText}`;
+                }
+                
+                fileStatus.textContent = errorMessage;
+                fileStatus.style.color = 'red';
+                progressContainer.classList.add('failed');
+                
+                // Hide cancel button
+                const cancelBtn = progressContainer.querySelector('.cancel-file-btn');
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none';
+                }
+                
+                reject(new Error(errorMessage));
+            }
+        });
+        
+        // Handle upload error
+        xhr.addEventListener('error', () => {
+            fileStatus.textContent = 'Network error occurred!';
+            fileStatus.style.color = 'red';
+            progressContainer.classList.add('failed');
+            
+            // Hide cancel button
+            const cancelBtn = progressContainer.querySelector('.cancel-file-btn');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
+            }
+            
+            reject(new Error('Network error'));
+        });
+        
+        // Handle upload abort
+        xhr.addEventListener('abort', () => {
+            fileStatus.textContent = 'Upload cancelled!';
+            fileStatus.style.color = 'orange';
+            progressContainer.classList.add('cancelled');
+            
+            // Hide cancel button
+            const cancelBtn = progressContainer.querySelector('.cancel-file-btn');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
+            }
+            
+            reject(new Error('Upload cancelled'));
+        });
+        
+        // Start upload
+        xhr.open('POST', `${API_BASE}/files/stream-upload`);
+        
+        // Add authentication headers
+        const authHeaders = getAuthHeaders();
+        for (const [key, value] of Object.entries(authHeaders)) {
+            xhr.setRequestHeader(key, value);
+        }
+        
+        fileStatus.textContent = 'Starting upload...';
+        xhr.send(formData);
+        
+        // Store xhr for potential cancellation
+        progressContainer.xhr = xhr;
+
+        // Add cancel button for individual file
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-sm btn-outline-danger cancel-file-btn';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+        cancelBtn.title = 'Cancel upload';
+        cancelBtn.onclick = () => {
+            if (xhr) {
+                xhr.abort();
+            }
+        };
+        progressContainer.querySelector('.file-progress-info').appendChild(cancelBtn);
+    });
+}
+
+// New streaming upload function with detailed progress
+async function uploadAllFilesWithProgress() {
+    if (selectedFiles.length === 0) {
+        showToast('No files selected', 'error');
+        return;
+    }
+
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressText = document.getElementById('progressText');
+    
+    // Clear previous progress containers
+    const existingContainer = uploadProgress.querySelector('.files-progress-container');
+    if (existingContainer) {
+        existingContainer.remove();
+    }
+    
+    // Update main progress text
+    progressText.textContent = `Uploading ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}...`;
+    uploadProgress.style.display = 'block';
+    
+    // Add cancel all button
+    if (!uploadProgress.querySelector('.cancel-all-btn')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-sm btn-outline-danger cancel-all-btn';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel All';
+        cancelBtn.onclick = cancelAllUploads;
+        uploadProgress.appendChild(cancelBtn);
+    }
+
+    const uploadedFiles = [];
+    let successCount = 0;
+    let failCount = 0;
+    let cancelCount = 0;
+
+    try {
+        // Upload files concurrently (limit to 3 concurrent uploads)
+        const concurrentLimit = 3;
+        const uploadPromises = [];
+        
+        for (let i = 0; i < selectedFiles.length; i += concurrentLimit) {
+            const batch = selectedFiles.slice(i, i + concurrentLimit);
+            const batchPromises = batch.map((file, batchIndex) => 
+                uploadFileWithProgress(file, i + batchIndex, selectedFiles.length)
+                    .then(fileData => {
+                        uploadedFiles.push(fileData);
+                        successCount++;
+                        console.log(`✅ Uploaded: ${fileData.original_filename} (ID: ${fileData.id})`);
+                        return fileData;
+                    })
+                    .catch(error => {
+                        console.error(`❌ Failed to upload ${file.name}:`, error);
+                        if (error.message === 'Upload cancelled') {
+                            cancelCount++;
+                        } else {
+                            failCount++;
+                        }
+                        return null;
+                    })
+            );
+            
+            uploadPromises.push(...batchPromises);
+            
+            // Wait for this batch to complete before starting the next
+            await Promise.allSettled(batchPromises);
+        }
+
+        // Wait for all uploads to complete
+        await Promise.allSettled(uploadPromises);
+
+        // Update main progress text
+        progressText.textContent = `Upload complete: ${successCount} successful, ${failCount} failed, ${cancelCount} cancelled`;
+
+        // Show results
+        if (successCount > 0) {
+            showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
+
+            // Store file IDs for clip creation
+            const fileIds = uploadedFiles.map(f => f.id);
+            document.getElementById('clipForm').dataset.fileIds = JSON.stringify(fileIds);
+
+            // Auto-fill clip title with first filename or "Multiple files"
+            const titleInput = document.getElementById('clipTitle');
+            if (uploadedFiles.length === 1) {
+                titleInput.value = uploadedFiles[0].original_filename;
+            } else {
+                titleInput.value = `Multiple files (${uploadedFiles.length})`;
+            }
+
+            // Show uploaded files
+            showUploadedFiles(uploadedFiles);
+        }
+
+        if (failCount > 0) {
+            showToast(`Failed to upload ${failCount} file(s)`, 'error');
+        }
+        
+        if (cancelCount > 0) {
+            showToast(`Cancelled ${cancelCount} upload(s)`, 'warning');
+        }
+
+    } finally {
+        // Remove cancel button
+        const cancelBtn = uploadProgress.querySelector('.cancel-all-btn');
+        if (cancelBtn) {
+            cancelBtn.remove();
+        }
+        
+        // Hide progress after 5 seconds if all completed
+        setTimeout(() => {
+            const hasActiveUploads = uploadProgress.querySelectorAll('.file-upload-progress:not(.completed):not(.failed):not(.cancelled)').length > 0;
+            if (!hasActiveUploads) {
+                uploadProgress.style.display = 'none';
+            }
+        }, 5000);
+    }
+}
+
+// Function to cancel all ongoing uploads
+function cancelAllUploads() {
+    const progressContainers = document.querySelectorAll('.file-upload-progress:not(.completed):not(.failed):not(.cancelled)');
+    progressContainers.forEach(container => {
+        if (container.xhr) {
+            container.xhr.abort();
+        }
+    });
+    showToast('All uploads cancelled', 'warning');
+}
+
+// Legacy upload function (fallback)
 async function uploadAllFiles() {
     if (selectedFiles.length === 0) {
         showToast('No files selected', 'error');
@@ -1161,7 +1471,7 @@ async function uploadAllFiles() {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                // Upload file
+                // Upload file using legacy endpoint
                 const response = await fetch(`${API_BASE}/files/upload`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
@@ -1217,6 +1527,21 @@ async function uploadAllFiles() {
         uploadProgress.style.display = 'none';
     }
 }
+
+// Smart upload function that chooses the best method
+async function smartUpload() {
+    // Try enhanced upload first, fallback to legacy if it fails
+    try {
+        console.log('Attempting enhanced stream upload with progress tracking');
+        return await uploadAllFilesWithProgress();
+    } catch (error) {
+        console.warn('Enhanced upload failed, falling back to legacy method:', error);
+        showToast('Using fallback upload method', 'info');
+        return await uploadAllFiles();
+    }
+}
+
+
 
 function showUploadedFiles(files) {
     const fileUpload = document.getElementById('fileUpload');
