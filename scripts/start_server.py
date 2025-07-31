@@ -2,15 +2,17 @@
 """
 Development server startup script for CLIP.LRU
 """
-
+import os
 import subprocess
 import sys
 from pathlib import Path
 
+from sqlalchemy import text
+
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-
+os.chdir(project_root)
 
 def check_dependencies():
     """Check if all dependencies are installed"""
@@ -33,7 +35,7 @@ def check_database():
     try:
         from app.database import engine
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         print("✅ Database connection successful")
         return True
     except Exception as e:
