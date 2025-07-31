@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLIP.LRU - Paste Before You Think</title>
     <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="static/css/i18n.css">
     <link href="static/css/font-awesome-6.0.0.min.css" rel="stylesheet">
 <!--    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">-->
+
+    <!-- i18n Scripts-->
+    <script src="static/js/i18n.js"></script>
+    <script src="static/js/language.js"></script>
 
     <!-- CodeMirror 5 -->
     <link rel="stylesheet" href="static/lib/codemirror5/codemirror.min.css">
@@ -37,21 +42,29 @@
             <div class="nav-left">
                 <div class="logo">
                     <i class="fas fa-clipboard"></i>
-                    <span>CLIP.LRU</span>
+                    <span data-i18n="header.title">CLIP.LRU</span>
                 </div>
             </div>
             
             <div class="nav-center">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search clips...">
-                </div>
+                    <input type="text" id="searchInput" data-i18n-attr='{"placeholder":"clips.search_placeholder"}'>
+                </div>  
             </div>
             
             <div class="nav-right">
+                <!-- Language Switcher -->
+                <div class="language-switcher">
+                    <select id="languageSelect" onchange="handleLanguageChange(this.value)">
+                        <option value="en">EN</option>
+                        <option value="zh-CN">中文</option>
+                    </select>
+                </div>
+                
                 <button class="btn btn-primary" id="newClipBtn">
                     <i class="fas fa-plus"></i>
-                    New Clip
+                    <span data-i18n="clips.new_clip">New Clip</span>
                 </button>
                 <div class="user-menu">
                     <button class="btn btn-ghost" id="userMenuBtn">
@@ -59,21 +72,21 @@
                     </button>
                     <div class="dropdown-menu" id="userDropdown">
                         <div class="user-info" id="userInfo">
-                            <div class="user-name">Anonymous User</div>
-                            <div class="user-status">Limited features</div>
+                            <div class="user-name" data-i18n="user.anonymous">Anonymous User</div>
+                            <div class="user-status" data-i18n="user.limited_features">Limited features</div>
                         </div>
                         <hr>
                         <a href="#" id="loginBtn">
                             <i class="fas fa-sign-in-alt"></i>
-                            Sign In
+                            <span data-i18n="user.login">Sign In</span>
                         </a>
                         <a href="#" id="registerBtn">
                             <i class="fas fa-user-plus"></i>
-                            Sign Up
+                            <span data-i18n="user.register">Sign Up</span>
                         </a>
                         <a href="#" id="logoutBtn" style="display: none;">
                             <i class="fas fa-sign-out-alt"></i>
-                            Sign Out
+                            <span data-i18n="user.logout">Sign Out</span>
                         </a>
                     </div>
                 </div>
@@ -86,18 +99,18 @@
         <!-- Welcome Section -->
         <section class="welcome-section" id="welcomeSection">
             <div class="container">
-                <h1>Welcome to CLIP.LRU</h1>
-                <p class="subtitle">Paste Before You Think - Intelligent clipboard management with LRU caching</p>
+                <h1 data-i18n="welcome.title">Welcome to CLIP.LRU</h1>
+                <p class="subtitle" data-i18n="welcome.subtitle">Paste Before You Think - Intelligent clipboard management with LRU caching</p>
                 
                 <!-- Anonymous User Prompt -->
                 <div class="anonymous-prompt" id="anonymousPrompt">
                     <div class="prompt-content">
                         <i class="fas fa-info-circle"></i>
                         <div>
-                            <h3>You're using CLIP.LRU as an anonymous user</h3>
-                            <p>Create an account to unlock unlimited clips, larger file uploads, and more features.</p>
+                            <h3 data-i18n="welcome.anonymous_title">You're using CLIP.LRU as an anonymous user</h3>
+                            <p data-i18n="welcome.anonymous_description">Create an account to unlock unlimited clips, larger file uploads, and more features.</p>
                         </div>
-                        <button class="btn btn-primary" id="upgradeBtn">Upgrade Account</button>
+                        <button class="btn btn-primary" id="upgradeBtn" data-i18n="welcome.upgrade_account">Upgrade Account</button>
                     </div>
                 </div>
             </div>
@@ -107,19 +120,19 @@
         <section class="clips-section">
             <div class="container">
                 <div class="section-header">
-                    <h2>Your Clips</h2>
+                    <h2 data-i18n="clips.title">Your Clips</h2>
                     <div class="filters">
                         <select id="typeFilter">
-                            <option value="">All Types</option>
-                            <option value="text">Text</option>
-                            <option value="markdown">Markdown</option>
-                            <option value="file">File</option>
-                            <option value="image">Image</option>
+                            <option value="" data-i18n="clips.types.all">All Types</option>
+                            <option value="text" data-i18n="clips.types.text">Text</option>
+                            <option value="markdown" data-i18n="clips.types.markdown">Markdown</option>
+                            <option value="file" data-i18n="clips.types.file">File</option>
+                            <option value="image" data-i18n="clips.types.image">Image</option>
                         </select>
                         <select id="sortFilter">
-                            <option value="recent">Most Recent</option>
-                            <option value="accessed">Most Accessed</option>
-                            <option value="pinned">Pinned First</option>
+                            <option value="recent" data-i18n="clips.sort.recent">Most Recent</option>
+                            <option value="accessed" data-i18n="clips.sort.accessed">Most Accessed</option>
+                            <option value="pinned" data-i18n="clips.sort.pinned">Pinned First</option>
                         </select>
                     </div>
                 </div>
@@ -134,24 +147,24 @@
                                 <span>Text</span>
                             </div>
                             <div class="clip-actions">
-                                <button class="btn-icon" title="Pin">
+                                <button class="btn-icon" data-i18n-attr='{"title":"common.pin"}'>
                                     <i class="fas fa-thumbtack"></i>
                                 </button>
-                                <button class="btn-icon" title="Share">
+                                <button class="btn-icon" data-i18n-attr='{"title":"common.share"}'>
                                     <i class="fas fa-share"></i>
                                 </button>
-                                <button class="btn-icon" title="Delete">
+                                <button class="btn-icon" data-i18n-attr='{"title":"common.delete"}'>
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="clip-content">
-                            <h4>Welcome Note</h4>
-                            <p>Welcome to CLIP.LRU! This is your first clip. You can create, edit, and share clips easily.</p>
+                            <h4 data-i18n="clips.welcome_note">Welcome Note</h4>
+                            <p data-i18n="clips.welcome_content">Welcome to CLIP.LRU! This is your first clip. You can create, edit, and share clips easily.</p>
                         </div>
                         <div class="clip-footer">
                             <span class="clip-time">2 minutes ago</span>
-                            <span class="clip-access">Private</span>
+                            <span class="clip-access" data-i18n="clips.access_levels.private">Private</span>
                         </div>
                     </div>
                 </div>
@@ -159,17 +172,17 @@
                 <!-- Loading -->
                 <div class="loading" id="loading">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading clips...</span>
+                    <span data-i18n="clips.loading">Loading clips...</span>
                 </div>
 
                 <!-- Empty State -->
                 <div class="empty-state" id="emptyState" style="display: none;">
                     <i class="fas fa-clipboard"></i>
-                    <h3>No clips yet</h3>
-                    <p>Create your first clip to get started</p>
+                    <h3 data-i18n="clips.empty_title">No clips yet</h3>
+                    <p data-i18n="clips.empty_description">Create your first clip to get started</p>
                     <button class="btn btn-primary" onclick="showCreateModal()">
                         <i class="fas fa-plus"></i>
-                        Create First Clip
+                        <span data-i18n="clips.create_first">Create First Clip</span>
                     </button>
                 </div>
             </div>
@@ -180,28 +193,28 @@
     <div class="modal" id="clipModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Create New Clip</h3>
+                <h3 id="modalTitle" data-i18n="modal.create_title">Create New Clip</h3>
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="clipForm">
                     <div class="form-group">
-                        <label for="clipTitle">Title (optional)</label>
-                        <input type="text" id="clipTitle" placeholder="Enter clip title">
+                        <label for="clipTitle" data-i18n="modal.title_label">Title (optional)</label>
+                        <input type="text" id="clipTitle" data-i18n-attr='{"placeholder":"modal.title_placeholder"}'>
                     </div>
                     
                     <div class="form-group">
-                        <label for="clipType">Type</label>
+                        <label for="clipType" data-i18n="modal.type_label">Type</label>
                         <select id="clipType">
-                            <option value="text">Text</option>
-                            <option value="markdown">Markdown</option>
-                            <option value="file">File</option>
+                            <option value="text" data-i18n="clips.types.text">Text</option>
+                            <option value="markdown" data-i18n="clips.types.markdown">Markdown</option>
+                            <option value="file" data-i18n="clips.types.file">File</option>
                         </select>
                     </div>
                     
                     <div class="form-group" id="contentGroup">
                         <div class="content-header">
-                            <label for="clipContent">Content</label>
+                            <label for="clipContent" data-i18n="modal.content_label">Content</label>
                             <div class="content-controls">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="isMarkdown">
@@ -210,11 +223,11 @@
                                 </label>
                                 <div class="editor-controls" id="editorControls" style="display: none;">
                                     <button type="button" id="previewToggle" class="btn btn-sm btn-outline">
-                                        <i class="fas fa-eye"></i> View
+                                        <i class="fas fa-eye"></i> <span data-i18n="common.view">View</span>
                                     </button>
                                     <select id="editorTheme" class="form-select-sm">
-                                        <option value="default">Light</option>
-                                        <option value="material">Dark</option>
+                                        <option value="default" data-i18n="common.light">Light</option>
+                                        <option value="material" data-i18n="common.dark">Dark</option>
                                     </select>
                                 </div>
                             </div>
@@ -222,7 +235,7 @@
 
                         <div class="editor-container">
                             <!-- CodeMirror will replace this textarea -->
-                            <textarea id="clipContent" placeholder="Paste or type your content here..."></textarea>
+                            <textarea id="clipContent" data-i18n-attr='{"placeholder":"modal.content_placeholder"}'></textarea>
 
                             <!-- Preview panel -->
                             <div id="markdownPreview" class="preview-panel" style="display: none;">
@@ -231,16 +244,16 @@
                         </div>
 
                         <div class="editor-status" id="editorStatus" style="display: none;">
-                            <span id="editorInfo">Ready</span>
+                            <span id="editorInfo" data-i18n="common.ready">Ready</span>
                             <span id="editorPosition"></span>
                         </div>
                     </div>
                     
                     <div class="form-group" id="fileGroup" style="display: none;">
-                        <label>File Upload</label>
+                        <label data-i18n="modal.file_upload_label">File Upload</label>
                         <div class="file-upload" id="fileUpload">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Drag & drop files here or click to browse</p>
+                            <p data-i18n="modal.drag_drop">Drag & drop files here or click to browse</p>
                             <input type="file" id="fileInput" multiple>
                         </div>
                         <div class="upload-progress" id="uploadProgress" style="display: none;">
@@ -252,23 +265,23 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="accessLevel">Access Level</label>
+                        <label for="accessLevel" data-i18n="modal.access_level">Access Level</label>
                         <select id="accessLevel">
-                            <option value="private">Private</option>
-                            <option value="public">Public</option>
-                            <option value="encrypted">Encrypted</option>
+                            <option value="private" data-i18n="clips.access_levels.private">Private</option>
+                            <option value="public" data-i18n="clips.access_levels.public">Public</option>
+                            <option value="encrypted" data-i18n="clips.access_levels.encrypted">Encrypted</option>
                         </select>
                     </div>
                     
                     <div class="form-group" id="passwordGroup" style="display: none;">
-                        <label for="clipPassword">Password</label>
-                        <input type="password" id="clipPassword" placeholder="Enter password for encrypted clip">
+                        <label for="clipPassword" data-i18n="modal.password_label">Password</label>
+                        <input type="password" id="clipPassword" data-i18n-attr='{"placeholder":"modal.password_placeholder"}'>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" id="saveClipBtn">Save Clip</button>
+                <button class="btn btn-secondary" onclick="closeModal()" data-i18n="common.cancel">Cancel</button>
+                <button class="btn btn-primary" id="saveClipBtn" data-i18n="modal.create">Create Clip</button>
             </div>
         </div>
     </div>
@@ -277,24 +290,24 @@
     <div class="modal" id="loginModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Sign In</h3>
+                <h3 data-i18n="auth.sign_in_title">Sign In</h3>
                 <button class="close-btn" onclick="closeLoginModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="loginForm">
                     <div class="form-group">
-                        <label for="loginUsername">Username or Email</label>
-                        <input type="text" id="loginUsername" required>
+                        <label for="loginUsername" data-i18n="auth.username_email">Username or Email</label>
+                        <input type="text" id="loginUsername" data-i18n-attr='{"placeholder":"auth.username_placeholder"}' required>
                     </div>
                     <div class="form-group">
-                        <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required>
+                        <label for="loginPassword" data-i18n="auth.password">Password</label>
+                        <input type="password" id="loginPassword" data-i18n-attr='{"placeholder":"auth.password_placeholder"}' required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button>
-                <button class="btn btn-primary" id="loginSubmitBtn">Sign In</button>
+                <button class="btn btn-secondary" onclick="closeLoginModal()" data-i18n="common.cancel">Cancel</button>
+                <button class="btn btn-primary" id="loginSubmitBtn" data-i18n="user.login">Sign In</button>
             </div>
         </div>
     </div>
@@ -303,32 +316,32 @@
     <div class="modal" id="registerModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Create Account</h3>
+                <h3 data-i18n="auth.create_account_title">Create Account</h3>
                 <button class="close-btn" onclick="closeRegisterModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="registerForm">
                     <div class="form-group">
-                        <label for="regUsername">Username</label>
-                        <input type="text" id="regUsername" required>
+                        <label for="regUsername" data-i18n="auth.username">Username</label>
+                        <input type="text" id="regUsername" data-i18n-attr='{"placeholder":"auth.username_placeholder"}' required>
                     </div>
                     <div class="form-group">
-                        <label for="regEmail">Email</label>
-                        <input type="email" id="regEmail" required>
+                        <label for="regEmail" data-i18n="auth.email">Email</label>
+                        <input type="email" id="regEmail" data-i18n-attr='{"placeholder":"auth.email_placeholder"}' required>
                     </div>
                     <div class="form-group">
-                        <label for="regPassword">Password</label>
-                        <input type="password" id="regPassword" required>
+                        <label for="regPassword" data-i18n="auth.password">Password</label>
+                        <input type="password" id="regPassword" data-i18n-attr='{"placeholder":"auth.password_placeholder"}' required>
                     </div>
                     <div class="form-group">
-                        <label for="regFullName">Full Name (optional)</label>
-                        <input type="text" id="regFullName">
+                        <label for="regFullName" data-i18n="auth.full_name">Full Name (optional)</label>
+                        <input type="text" id="regFullName" data-i18n-attr='{"placeholder":"auth.full_name_placeholder"}'>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
-                <button class="btn btn-primary" id="registerSubmitBtn">Create Account</button>
+                <button class="btn btn-secondary" onclick="closeRegisterModal()" data-i18n="common.cancel">Cancel</button>
+                <button class="btn btn-primary" id="registerSubmitBtn" data-i18n="user.register">Create Account</button>
             </div>
         </div>
     </div>

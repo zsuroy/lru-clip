@@ -1,0 +1,170 @@
+/* 多语言相关样式 - i18n Styles */
+
+/* 语言切换器样式 */
+.language-switcher {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.language-switcher select {
+    background: var(--bg-primary, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: var(--text-primary, #1e293b);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 70px;
+}
+
+.language-switcher select:hover {
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.language-switcher select:focus {
+    outline: none;
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.language-switcher select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--bg-secondary, #f8fafc);
+}
+
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+    .language-switcher select {
+        background: var(--bg-dark, #1e293b);
+        border-color: var(--border-dark, #475569);
+        color: var(--text-dark, #f1f5f9);
+    }
+    
+    .language-switcher select:hover {
+        border-color: var(--primary-color, #3b82f6);
+    }
+    
+    .language-switcher select:disabled {
+        background-color: var(--bg-dark-secondary, #334155);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .language-switcher {
+        margin-right: 10px;
+    }
+    
+    .language-switcher select {
+        padding: 4px 8px;
+        font-size: 12px;
+        min-width: 60px;
+    }
+}
+
+/* 语言切换时的过渡效果 */
+.i18n-transition {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.i18n-transition.changing {
+    opacity: 0.7;
+}
+
+/* RTL语言支持（未来扩展用） */
+[dir="rtl"] .language-switcher {
+    margin-left: 15px;
+    margin-right: 0;
+}
+
+[dir="rtl"] .nav-right {
+    flex-direction: row-reverse;
+}
+
+/* 语言切换加载状态 */
+.language-switcher.loading select {
+    position: relative;
+}
+
+.language-switcher.loading select::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border-color, #e2e8f0);
+    border-top: 2px solid var(--primary-color, #3b82f6);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* 中文字体优化 */
+[lang="zh-CN"] {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", 
+                 "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+[lang="zh-CN"] .logo span {
+    font-weight: 500;
+}
+
+[lang="zh-CN"] button, 
+[lang="zh-CN"] .btn {
+    font-weight: normal;
+}
+
+/* 文本长度适应（中文通常比英文短） */
+[lang="zh-CN"] .btn {
+    min-width: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+[lang="zh-CN"] .form-group label {
+    white-space: nowrap;
+}
+
+/* 确保select选项在语言切换时正确显示 */
+select option {
+    color: var(--text-primary, #1e293b);
+    background: var(--bg-primary, #ffffff);
+}
+
+/* 选项翻译更新时的平滑过渡 */
+select option.updating {
+    opacity: 0.7;
+}
+
+/* 多语言模态框优化 */
+[lang="zh-CN"] .modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+[lang="zh-CN"] .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 提示文本样式优化 */
+[lang="zh-CN"] .subtitle,
+[lang="zh-CN"] .empty-state p,
+[lang="zh-CN"] .anonymous-prompt p {
+    line-height: 1.6;
+}
+
+/* 按钮文本样式 */
+[lang="zh-CN"] .btn span {
+    font-weight: normal;
+} 

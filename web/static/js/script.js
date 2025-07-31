@@ -2801,7 +2801,10 @@ async function shareClip(shareToken) {
 }
 
 async function deleteClip(clipId) {
-    if (!confirm('Are you sure you want to delete this clip?')) {
+    const confirmMessage = window.i18n ? 
+        window.i18n.t('messages.delete_confirm') : 
+        'Are you sure you want to delete this clip?';
+    if (!confirm(confirmMessage)) {
         return;
     }
     
