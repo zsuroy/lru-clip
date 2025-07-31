@@ -1,0 +1,122 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "share": "Share",
+    "copy": "Copy",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "download": "Download",
+    "upload": "Upload",
+    "ready": "Ready",
+    "view": "View",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "header": {
+    "title": "CLIP.LRU",
+    "subtitle": "Paste Before You Think"
+  },
+  "welcome": {
+    "title": "Welcome to CLIP.LRU",
+    "subtitle": "Paste Before You Think - Intelligent clipboard management with LRU caching",
+    "anonymous_title": "You're using CLIP.LRU as an anonymous user",
+    "anonymous_description": "Create an account to unlock unlimited clips, larger file uploads, and more features.",
+    "upgrade_account": "Upgrade Account"
+  },
+  "clips": {
+    "title": "Your Clips",
+    "new_clip": "New Clip",
+    "search_placeholder": "Search clips...",
+    "types": {
+      "all": "All Types",
+      "text": "Text",
+      "markdown": "Markdown",
+      "file": "File",
+      "image": "Image"
+    },
+    "sort": {
+      "recent": "Most Recent",
+      "accessed": "Most Accessed",
+      "pinned": "Pinned First"
+    },
+    "loading": "Loading clips...",
+    "empty_title": "No clips yet",
+    "empty_description": "Create your first clip to get started",
+    "create_first": "Create First Clip",
+    "welcome_note": "Welcome Note",
+    "welcome_content": "Welcome to CLIP.LRU! This is your first clip. You can create, edit, and share clips easily.",
+    "time_ago": {
+      "minutes": "{{count}} minutes ago",
+      "hours": "{{count}} hours ago",
+      "days": "{{count}} days ago"
+    },
+    "access_levels": {
+      "private": "Private",
+      "public": "Public",
+      "encrypted": "Encrypted"
+    }
+  },
+  "modal": {
+    "create_title": "Create New Clip",
+    "edit_title": "Edit Clip",
+    "title_label": "Title (optional)",
+    "title_placeholder": "Enter clip title",
+    "type_label": "Type",
+    "content_label": "Content",
+    "content_placeholder": "Paste or type your content here...",
+    "file_upload_label": "File Upload",
+    "drag_drop": "Drag & drop files here or click to browse",
+    "access_level": "Access Level",
+    "password_label": "Password (for encrypted clips)",
+    "password_placeholder": "Enter password",
+    "create": "Create Clip",
+    "update": "Update Clip"
+  },
+  "auth": {
+    "sign_in_title": "Sign In",
+    "create_account_title": "Create Account",
+    "username": "Username",
+    "username_email": "Username or Email",
+    "username_placeholder": "Enter your username",
+    "email": "Email",
+    "email_placeholder": "Enter your email",
+    "password": "Password",
+    "password_placeholder": "Enter your password",
+    "full_name": "Full Name (optional)",
+    "full_name_placeholder": "Enter your full name"
+  },
+  "file": {
+    "upload_progress": "Uploading... {{percent}}%",
+    "drag_overlay": "Drop files here to upload",
+    "selected_files": "Selected Files ({{count}})",
+    "smart_upload": "Smart Upload"
+  },
+  "user": {
+    "anonymous": "Anonymous User",
+    "limited_features": "Limited features",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "shared": {
+    "back_to_app": "← Back to CLIP.LRU",
+    "shared_clip": "Shared Clip",
+    "copy_to_clipboard": "Copy to clipboard",
+    "shared_at": "Shared {{date}}",
+    "enter_password": "Enter password",
+    "unlock": "Unlock"
+  },
+  "messages": {
+    "copied": "Copied to clipboard!",
+    "copy_failed": "Failed to copy",
+    "upload_success": "Files uploaded successfully",
+    "upload_failed": "Upload failed",
+    "delete_confirm": "Are you sure you want to delete this clip?",
+    "invalid_share_link": "Invalid share link",
+    "error_occurred": "An error occurred"
+  }
+} 

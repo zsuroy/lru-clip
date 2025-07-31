@@ -4,9 +4,12 @@ File service for handling file uploads and downloads
 
 import hashlib
 import shutil
+import uuid
+import time
 from typing import Optional, List, Tuple
 from pathlib import Path
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile, HTTPException, status
 
 from app.models.file import File
@@ -16,17 +19,43 @@ from app.config import settings
 
 
 class FileService:
-    """Service for managing file uploads and downloads"""
+    """Service for managing file uploads and downloads with concurrent safety"""
     
     def __init__(self):
         self.storage_path = Path(settings.storage_path)
         self.max_file_size = settings.max_file_size
         self.storage_path.mkdir(parents=True, exist_ok=True)
     
+    def _generate_unique_temp_filename(self, original_filename: str) -> str:
+        """Generate unique temporary filename to avoid conflicts"""
+        timestamp = int(time.time() * 1000000)  # microsecond precision
+        unique_id = str(uuid.uuid4())[:8]
+        safe_name = "".join(c for c in original_filename if c.isalnum() or c in "._-")[:50]
+        return f"temp_{timestamp}_{unique_id}_{safe_name}"
+    
     def _generate_filename(self, original_filename: str, file_hash: str) -> str:
         """Generate unique filename using hash"""
         file_ext = Path(original_filename).suffix
         return f"{file_hash}{file_ext}"
+    
+    def _retry_db_operation(self, db: Session, operation, max_retries: int = 3):
+        """Retry database operation in case of concurrent conflicts"""
+        for attempt in range(max_retries):
+            try:
+                result = operation()
+                db.commit()
+                return result
+            except IntegrityError as e:
+                db.rollback()
+                if attempt == max_retries - 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Database conflict occurred, please try again"
+                    )
+                time.sleep(0.1 * (2 ** attempt))  # Exponential backoff
+            except Exception as e:
+                db.rollback()
+                raise e
     
     def _calculate_file_hash(self, file_path: Path) -> str:
         """Calculate SHA-256 hash of file"""
@@ -80,8 +109,9 @@ class FileService:
                 detail=f"File too large. Maximum size is {max_size} bytes"
             )
         
-        # Create temporary file path
-        temp_path = self.storage_path / f"temp_{file.filename}"
+        # Create unique temporary file path to avoid conflicts
+        temp_filename = self._generate_unique_temp_filename(file.filename)
+        temp_path = self.storage_path / temp_filename
         
         try:
             # Save uploaded file temporarily
@@ -166,8 +196,9 @@ class FileService:
                 detail=f"File too large. Maximum size is {max_size} bytes"
             )
         
-        # Create temporary file path
-        temp_path = self.storage_path / f"temp_{file.filename}"
+        # Create unique temporary file path to avoid conflicts
+        temp_filename = self._generate_unique_temp_filename(file.filename)
+        temp_path = self.storage_path / temp_filename
         
         try:
             # Stream upload file with progress tracking

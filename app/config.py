@@ -24,6 +24,12 @@ class Settings(BaseSettings):
 
     # Development and testing settings
     debug: bool = False
+    
+    # Concurrency and performance settings
+    db_pool_size: int = 5  # Database connection pool size
+    db_max_overflow: int = 10  # Maximum extra connections
+    db_pool_timeout: int = 30  # Connection timeout in seconds
+    db_pool_recycle: int = 3600  # Connection recycle time in seconds
 
     model_config = SettingsConfigDict(
         env_file=".env",

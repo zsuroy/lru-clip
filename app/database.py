@@ -52,10 +52,11 @@ def get_engine_config(database_url: str) -> dict:
         # MySQL/PostgreSQL configuration
         return {
             "pool_pre_ping": True,
-            "pool_recycle": 300,
+            "pool_recycle": settings.db_pool_recycle,
             "echo": settings.debug,
-            "pool_size": 5,
-            "max_overflow": 10,
+            "pool_size": settings.db_pool_size,
+            "max_overflow": settings.db_max_overflow,
+            "pool_timeout": settings.db_pool_timeout,
         }
 
 
